@@ -178,7 +178,12 @@
         }
       };
     }
-    return { slus: fileReader(found.slus), mrg: fileReader(found.mrg), slusName: found.slus.name };
+    return {
+      slus: fileReader(found.slus), mrg: fileReader(found.mrg), slusName: found.slus.name,
+      // usado pelo editor de mod (web/mod.js)
+      raw: raw, sectorSize: secSize, dataOffset: dataOff, slusFile: found.slus, mrgFile: found.mrg,
+      readRaw: function (lba, count) { return blob.read(lba * secSize, (lba + count) * secSize); }
+    };
   }
 
   // Aceita: 1 imagem de CD, ou os 2 arquivos soltos (SLUS_014.11 + WA_MRG.MRG).

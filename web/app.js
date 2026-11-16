@@ -157,8 +157,8 @@
 
   function render() {
     $('tools').hidden = !game;
-    if (!game) return renderEmpty();
-    ['cards', 'fusions', 'duelists'].forEach(function (v) {
+    if (!game && view !== 'mod') return renderEmpty();
+    ['cards', 'fusions', 'duelists', 'mod'].forEach(function (v) {
       $('tab' + v[0].toUpperCase() + v.slice(1)).setAttribute('aria-selected', view === v);
     });
     $('search').placeholder = view === 'duelists' ? 'Buscar duelista' : 'Buscar carta ou número';
@@ -170,6 +170,8 @@
       return '<button class="card' + (dim ? ' nodrop' : '') + '" data-card="' + c.id +
         '" aria-label="' + esc(c.name) + '">' + art(c.id) + '<span class="num">' + c.id + '</span></button>';
     };
+    $('search').hidden = view === 'mod';
+    if (view === 'mod') return renderMod();
     if (view === 'cards') {
       var list = game.cards.filter(match);
       main.innerHTML = '<p class="count">' + list.length + ' cartas</p><div class="grid">' +
@@ -269,7 +271,7 @@
       (game ? '<button id="btnClear" class="secondary">Apagar dados do app</button>' : '') + '</div>' +
       (native && native.applyPatch ? '<h3>Aplicar mod no jogo</h3><p class="meta">Gera um .bin novo com o patch (.ppf) aplicado, para abrir no DuckStation. ' +
         'Você escolhe: 1) o .bin do jogo, 2) o .ppf, 3) onde salvar. O jogo original não é alterado.</p>' +
-        '<div id="patch" class="stack"><button id="btnPatch">Aplicar patch .ppf</button></div>' : '') +
+        '<div class="stack patchbox"><button id="btnPatch">Aplicar patch .ppf</button></div>' : '') +
       '<h3>Atualização do app</h3><p class="meta">Versão instalada: build ' + BUILD + '</p>' +
       '<div id="update" class="stack"><button id="btnUpdate" class="secondary">Procurar atualização</button></div>');
   }
@@ -311,7 +313,9 @@
     });
   }
 
-  function patchBox(html) { if ($('patch')) $('patch').innerHTML = html; }
+  function patchBox(html) {
+    Array.prototype.forEach.call(document.querySelectorAll('.patchbox'), function (el) { el.innerHTML = html; });
+  }
   window.onPatchState = function (msg) {
     patchBox('<p class="meta">' + esc(msg) + '</p>' + (msg === 'cancelado' ? '<button id="btnPatch">Aplicar patch .ppf</button>' : ''));
   };
@@ -319,8 +323,8 @@
     patchBox('<progress max="1" value="' + f + '"></progress><p class="meta">Gravando… ' + Math.round(f * 100) + '%</p>');
   };
   window.onPatchDone = function (name) {
-    patchBox('<p class="note"><b>Pronto!</b> ' + esc(name) + ' foi salvo. No DuckStation, abra esse arquivo (Start File ou atualize a lista de jogos).</p>' +
-      '<button id="btnPatch" class="secondary">Aplicar outro patch</button>');
+    patchBox('<p class="note"><b>Pronto!</b> ' + esc(name) + ' foi salvo. No DuckStation, abra esse arquivo (Start File ou Scan For New Games). ' +
+      'Use um cartão de memória novo se mudou a base do jogo.</p>');
   };
   window.onPatchError = function (msg) {
     patchBox('<p class="error">Não deu certo: ' + esc(msg) + '</p><button id="btnPatch" class="secondary">Tentar de novo</button>');
@@ -330,6 +334,100 @@
     if ($('update')) $('update').innerHTML = '<p class="error">A atualização falhou (' + esc(msg) +
       ').</p><button id="btnUpdate" class="secondary">Tentar de novo</button>';
   };
+
+  /* ---------- Mod ("GameShark") ---------- */
+
+  var mod = { blob: null, caps: null, error: '', busy: false };
+  var MOD_DEFAULT = { drops: 100, starchips: 0, lp: 8000, allDrops: true, megamorph: true, difficulty: 'normal' };
+  var modOpts = (function () {
+    try { return Object.assign({}, MOD_DEFAULT, JSON.parse(localStorage.getItem('modOpts') || '{}')); } catch (e) { return Object.assign({}, MOD_DEFAULT); }
+  })();
+  function saveModOpts() { try { localStorage.setItem('modOpts', JSON.stringify(modOpts)); } catch (e) {} }
+
+  function renderMod() {
+    var c = mod.caps;
+    var head = '<div class="modcard"><h2>Criar meu mod</h2><p class="meta">Escolha as opções e o app grava um <b>.bin novo</b> para abrir no DuckStation. ' +
+      'O jogo base não é alterado; dá para gerar quantas versões quiser.</p>';
+    if (!mod.blob) {
+      main.innerHTML = head + '<div class="stack"><button id="btnModPick">Escolher o .bin do jogo</button></div>' +
+        (mod.error ? '<p class="error">' + esc(mod.error) + '</p>' : '') +
+        '<p class="meta">Funciona com o jogo original (todas as opções) e com o build Drop 100.</p></div>';
+      return;
+    }
+    if (!c) { main.innerHTML = head + '<p class="meta">Lendo o jogo…</p></div>'; return; }
+    var off = function (v) { return v == null ? ' disabled' : ''; };
+    var na = function (v) { return v == null ? '<small class="na">não disponível nesta versão do jogo</small>' : ''; };
+    var num = function (id, label, help, v, min, max, quick) {
+      return '<div class="opt"><label for="' + id + '"><b>' + label + '</b><small>' + help + '</small>' + na(c[id]) + '</label>' +
+        '<input id="' + id + '" class="modnum" type="number" inputmode="numeric" min="' + min + '" max="' + max + '" value="' + v + '"' + off(c[id]) + '>' +
+        (quick && c[id] != null ? '<div class="quick">' + quick.map(function (q) {
+          return '<button data-quick="' + id + '" data-v="' + q + '" aria-pressed="' + (+v === q) + '">' + q + '</button>';
+        }).join('') + '</div>' : '') + '</div>';
+    };
+    var tog = function (id, label, help) {
+      return '<label class="opt toggle"><span><b>' + label + '</b><small>' + help + '</small></span>' +
+        '<input type="checkbox" class="modtog" id="' + id + '"' + (modOpts[id] ? ' checked' : '') + '><i></i></label>';
+    };
+    var diffs = [['facil', 'Fácil'], ['normal', 'Normal'], ['dificil', 'Difícil'], ['muito', 'Muito difícil']];
+    var presets = [['original', 'Original'], ['drop100', 'Drop 100'], ['facil', 'Fácil demais'], ['desafio', 'Desafio']];
+    main.innerHTML = head + '<p class="meta">Base: <b>' + esc(mod.blob.name || 'jogo') + '</b> (' + esc(c.exe) + ') · ' +
+      '<button class="linkbtn" id="btnModPick">trocar</button></p></div>' +
+      '<h3>Atalhos</h3><div class="chips">' + presets.map(function (p) { return '<button data-preset="' + p[0] + '">' + p[1] + '</button>'; }).join('') + '</div>' +
+      '<h3>Opções</h3>' +
+      num('drops', 'Cartas por duelo vencido', 'Original: 1', modOpts.drops, 1, 999, [1, 5, 15, 100]) +
+      num('starchips', 'Starchips extras por duelo', 'Somados ao prêmio normal', modOpts.starchips, 0, 30000, [0, 100, 500]) +
+      num('lp', 'Vida inicial (os dois jogadores)', 'Original: 8000', modOpts.lp, 100, 9999, [4000, 8000, 9999]) +
+      tog('allDrops', 'Todas as cartas dropáveis', 'As 82 cartas que ninguém dropa vão para duelistas temáticos') +
+      tog('megamorph', 'Megamorph em S/A POW', 'Pegasus, DarkNite e Heishin passam a dropar no POW também') +
+      '<div class="opt"><span><b>Dificuldade dos decks</b><small>Difícil: os duelistas puxam mais os monstros fortes que já têm. Fácil: o contrário.</small></span>' +
+      '<div class="seg">' + diffs.map(function (d) {
+        return '<button data-diff="' + d[0] + '" aria-pressed="' + (modOpts.difficulty === d[0]) + '">' + d[1] + '</button>';
+      }).join('') + '</div></div>' +
+      '<div class="stack patchbox">' + (mod.busy ? '<p class="meta">Gerando…</p>' :
+        '<button id="btnModBuild">' + (native && native.buildImage ? 'Gerar .bin modificado' : 'Baixar patch .ppf') + '</button>') + '</div>';
+  }
+
+  async function modPicked(file) {
+    mod.blob = FM.fromFile(file); mod.caps = null; mod.error = ''; render();
+    try {
+      var ed = await FMMod.open(mod.blob);
+      mod.caps = ed.caps;
+      ['drops', 'starchips', 'lp'].forEach(function (k) {
+        if (ed.caps[k] == null) modOpts[k] = null; else if (modOpts[k] == null) modOpts[k] = ed.caps[k];
+      });
+    } catch (e) { mod.blob = null; mod.error = e.message || String(e); }
+    render();
+  }
+
+  function toBase64(u8) {
+    var s = '', chunk = 0x8000;
+    for (var i = 0; i < u8.length; i += chunk) s += String.fromCharCode.apply(null, u8.subarray(i, i + chunk));
+    return btoa(s);
+  }
+
+  async function modBuild() {
+    mod.busy = true; render();
+    try {
+      var ed = await FMMod.open(mod.blob);
+      var log = FMMod.apply(ed, modOpts);
+      if (!ed.writes.length) throw new Error('nada para mudar: a base já está com essas opções');
+      var res = await FMMod.buildPatch(ed);
+      var base = (mod.blob.name || 'jogo').replace(/\.(bin|BIN)$/, '');
+      var tag = [modOpts.drops > 1 ? modOpts.drops + ' cartas' : '', modOpts.difficulty !== 'normal' ? modOpts.difficulty : ''].filter(Boolean).join(' ');
+      var name = base + ' - FM Drops' + (tag ? ' (' + tag + ')' : '') + '.bin';
+      mod.busy = false; render();
+      patchBox('<p class="meta">' + esc(log.join(' · ')) + '</p><p class="meta">Escolha onde salvar o .bin…</p>');
+      if (native && native.buildImage) native.buildImage(toBase64(res.ppf), name);
+      else {
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([res.ppf])); a.download = name.replace(/\.bin$/, '.ppf'); a.click();
+        patchBox('<p class="note">Patch baixado. Aplique no .bin com um aplicador de PPF.</p>');
+      }
+    } catch (e) {
+      mod.busy = false; render();
+      patchBox('<p class="error">' + esc(e.message || String(e)) + '</p><button id="btnModBuild">Tentar de novo</button>');
+    }
+  }
 
   /* ---------- importação ---------- */
 
@@ -389,7 +487,16 @@
     if (t.id === 'btnImport') { $('file').value = ''; $('file').click(); }
     else if (t.id === 'btnSettings') showSettings();
     else if (t.id === 'sheetClose') closeSheet();
-    else if (/^tab(Cards|Fusions|Duelists)$/.test(t.id)) { view = t.id.slice(3).toLowerCase(); window.scrollTo(0, 0); render(); }
+    else if (/^tab(Cards|Fusions|Duelists|Mod)$/.test(t.id)) { view = t.id.slice(3).toLowerCase(); window.scrollTo(0, 0); render(); }
+    else if (t.id === 'btnModPick') { $('modFile').value = ''; $('modFile').click(); }
+    else if (t.id === 'btnModBuild') modBuild();
+    else if (t.dataset.preset) {
+      var pr = FMMod.PRESETS[t.dataset.preset];
+      Object.keys(pr).forEach(function (k) { if (!(mod.caps && ['drops', 'starchips', 'lp'].indexOf(k) >= 0 && mod.caps[k] == null)) modOpts[k] = pr[k]; });
+      saveModOpts(); render();
+    }
+    else if (t.dataset.quick) { modOpts[t.dataset.quick] = +t.dataset.v; saveModOpts(); render(); }
+    else if (t.dataset.diff) { modOpts.difficulty = t.dataset.diff; saveModOpts(); render(); }
     else if (t.dataset.fus) { fusFilter = t.dataset.fus; render(); }
     else if (t.id === 'btnClear') {
       if (confirm('Apagar as cartas e drops importados?')) clearAll().then(function () { game = null; closeSheet(); render(); });
@@ -402,8 +509,14 @@
     else if (t.dataset.card) showCard(+t.dataset.card, t.dataset.all);
   });
   $('file').addEventListener('change', function () { if (this.files.length) importFiles(this.files); });
+  $('modFile').addEventListener('change', function () { if (this.files.length) modPicked(this.files[0]); });
   $('search').addEventListener('input', function () { query = this.value; render(); });
   document.addEventListener('change', function (ev) {
+    if (ev.target.classList.contains('modnum')) {
+      var v = parseInt(ev.target.value, 10), mn = +ev.target.min, mx = +ev.target.max;
+      modOpts[ev.target.id] = isNaN(v) ? mn : Math.max(mn, Math.min(mx, v)); saveModOpts(); render(); return;
+    }
+    if (ev.target.classList.contains('modtog')) { modOpts[ev.target.id] = ev.target.checked; saveModOpts(); return; }
     if (ev.target.id !== 'perDuel') return;
     try { localStorage.setItem('perDuel', Math.max(1, parseInt(ev.target.value, 10) || 1)); } catch (e) {}
   });

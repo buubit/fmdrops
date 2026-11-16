@@ -77,7 +77,11 @@ final class PatchJob {
 
     /** Copia `image` para `out` aplicando o patch. Retorna o número de bytes gravados. */
     static long run(ContentResolver cr, Uri image, Uri ppf, Uri out, Progress progress) throws Exception {
-        List<Rec> recs = parse(readAll(cr.openInputStream(ppf)));
+        return run(cr, image, readAll(cr.openInputStream(ppf)), out, progress);
+    }
+
+    static long run(ContentResolver cr, Uri image, byte[] ppfBytes, Uri out, Progress progress) throws Exception {
+        List<Rec> recs = parse(ppfBytes);
         if (recs.isEmpty()) throw new Exception("o patch está vazio");
         long total = -1;
         try (android.content.res.AssetFileDescriptor fd = cr.openAssetFileDescriptor(image, "r")) {

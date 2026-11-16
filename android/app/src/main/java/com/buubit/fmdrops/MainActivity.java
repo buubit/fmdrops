@@ -39,8 +39,9 @@ import java.util.Iterator;
  */
 public class MainActivity extends Activity {
     private static final int PICK_FILE = 1;
-    private static final int PATCH_IMAGE = 2, PATCH_PPF = 3, PATCH_OUT = 4;
-    private Uri patchImage, patchPpf;
+    private static final int PATCH_IMAGE = 2, PATCH_PPF = 3, PATCH_OUT = 4, BUILD_OUT = 5;
+    private Uri patchImage, patchPpf, lastImage;
+    private byte[] buildPpf;
     private static final String HOST = "app.fmdrops";
     private static final String HOME = "https://" + HOST + "/index.html";
     private static final String UPDATE_PREFIX = "https://github.com/buubit/fmdrops/releases/download/";
@@ -200,6 +201,23 @@ public class MainActivity extends Activity {
             ui.post(() -> pick(PATCH_IMAGE));
         }
 
+        /** Grava um .bin novo: a última imagem escolhida no app + o patch gerado pelo editor (base64). */
+        @JavascriptInterface
+        public void buildImage(String ppfBase64, String suggestedName) {
+            if (lastImage == null) {
+                js("onPatchError", JSONObject.quote("escolha o .bin do jogo de novo"));
+                return;
+            }
+            buildPpf = android.util.Base64.decode(ppfBase64, android.util.Base64.DEFAULT);
+            ui.post(() -> {
+                Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                i.addCategory(Intent.CATEGORY_OPENABLE);
+                i.setType("application/octet-stream");
+                i.putExtra(Intent.EXTRA_TITLE, suggestedName);
+                startActivityForResult(i, BUILD_OUT);
+            });
+        }
+
         @JavascriptInterface
         public void applyUpdate(final String address) {
             new Thread(() -> {
@@ -232,6 +250,25 @@ public class MainActivity extends Activity {
         ui.post(() -> web.evaluateJavascript("window." + fn + " && window." + fn + "(" + arg + ")", null));
     }
 
+    private void runJob(final Uri img, final Object ppf, final Uri out) {
+        final String name = displayName(out);
+        new Thread(() -> {
+            try {
+                final long[] lastSent = { 0 };
+                PatchJob.Progress pr = f -> {
+                    long now = System.currentTimeMillis();
+                    if (now - lastSent[0] > 250) { lastSent[0] = now; js("onPatchProgress", String.valueOf(f)); }
+                };
+                if (ppf instanceof Uri) PatchJob.run(getContentResolver(), img, (Uri) ppf, out, pr);
+                else PatchJob.run(getContentResolver(), img, (byte[]) ppf, out, pr);
+                js("onPatchDone", JSONObject.quote(name));
+            } catch (Exception e) {
+                try { android.provider.DocumentsContract.deleteDocument(getContentResolver(), out); } catch (Exception ignored) { }
+                js("onPatchError", JSONObject.quote(String.valueOf(e.getMessage())));
+            }
+        }).start();
+    }
+
     private void onPatchResult(int request, int result, Intent data) {
         if (result != RESULT_OK || data == null || data.getData() == null) {
             js("onPatchState", JSONObject.quote("cancelado"));
@@ -253,27 +290,14 @@ public class MainActivity extends Activity {
             i.putExtra(Intent.EXTRA_TITLE, (mod.equals(base) ? base + " (mod)" : base + " - " + mod) + ".bin");
             startActivityForResult(i, PATCH_OUT);
         } else {
-            final Uri out = uri, img = patchImage, ppf = patchPpf;
-            final String name = displayName(out);
-            new Thread(() -> {
-                try {
-                    final long[] lastSent = { 0 };
-                    PatchJob.run(getContentResolver(), img, ppf, out, f -> {
-                        long now = System.currentTimeMillis();
-                        if (now - lastSent[0] > 250) { lastSent[0] = now; js("onPatchProgress", String.valueOf(f)); }
-                    });
-                    js("onPatchDone", JSONObject.quote(name));
-                } catch (Exception e) {
-                    try { android.provider.DocumentsContract.deleteDocument(getContentResolver(), out); } catch (Exception ignored) { }
-                    js("onPatchError", JSONObject.quote(String.valueOf(e.getMessage())));
-                }
-            }).start();
+            if (request == BUILD_OUT) runJob(lastImage, buildPpf, uri);
+            else runJob(patchImage, patchPpf, uri);
         }
     }
 
     @Override
     protected void onActivityResult(int request, int result, Intent data) {
-        if (request >= PATCH_IMAGE && request <= PATCH_OUT) { onPatchResult(request, result, data); return; }
+        if (request >= PATCH_IMAGE && request <= BUILD_OUT) { onPatchResult(request, result, data); return; }
         if (request != PICK_FILE || pending == null) return;
         Uri[] uris = null;
         if (result == RESULT_OK && data != null) {
@@ -285,6 +309,7 @@ public class MainActivity extends Activity {
                 uris = new Uri[] { data.getData() };
             }
         }
+        if (uris != null && uris.length == 1) lastImage = uris[0];
         pending.onReceiveValue(uris);
         pending = null;
     }
