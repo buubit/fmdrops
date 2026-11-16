@@ -267,6 +267,9 @@
         game.cards.length + ' cartas, ' + game.duelists.length + ' duelistas.' : 'Nenhum jogo importado.') + '</p>' +
       '<div class="stack"><button id="btnImport">Importar outra imagem / mod</button>' +
       (game ? '<button id="btnClear" class="secondary">Apagar dados do app</button>' : '') + '</div>' +
+      (native && native.applyPatch ? '<h3>Aplicar mod no jogo</h3><p class="meta">Gera um .bin novo com o patch (.ppf) aplicado, para abrir no DuckStation. ' +
+        'Você escolhe: 1) o .bin do jogo, 2) o .ppf, 3) onde salvar. O jogo original não é alterado.</p>' +
+        '<div id="patch" class="stack"><button id="btnPatch">Aplicar patch .ppf</button></div>' : '') +
       '<h3>Atualização do app</h3><p class="meta">Versão instalada: build ' + BUILD + '</p>' +
       '<div id="update" class="stack"><button id="btnUpdate" class="secondary">Procurar atualização</button></div>');
   }
@@ -307,6 +310,21 @@
         ').</p><button id="btnUpdate" class="secondary">Tentar de novo</button>';
     });
   }
+
+  function patchBox(html) { if ($('patch')) $('patch').innerHTML = html; }
+  window.onPatchState = function (msg) {
+    patchBox('<p class="meta">' + esc(msg) + '</p>' + (msg === 'cancelado' ? '<button id="btnPatch">Aplicar patch .ppf</button>' : ''));
+  };
+  window.onPatchProgress = function (f) {
+    patchBox('<progress max="1" value="' + f + '"></progress><p class="meta">Gravando… ' + Math.round(f * 100) + '%</p>');
+  };
+  window.onPatchDone = function (name) {
+    patchBox('<p class="note"><b>Pronto!</b> ' + esc(name) + ' foi salvo. No DuckStation, abra esse arquivo (Start File ou atualize a lista de jogos).</p>' +
+      '<button id="btnPatch" class="secondary">Aplicar outro patch</button>');
+  };
+  window.onPatchError = function (msg) {
+    patchBox('<p class="error">Não deu certo: ' + esc(msg) + '</p><button id="btnPatch" class="secondary">Tentar de novo</button>');
+  };
 
   window.onUpdateError = function (msg) {
     if ($('update')) $('update').innerHTML = '<p class="error">A atualização falhou (' + esc(msg) +
@@ -377,6 +395,7 @@
       if (confirm('Apagar as cartas e drops importados?')) clearAll().then(function () { game = null; closeSheet(); render(); });
     }
     else if (t.id === 'btnUpdate') checkUpdate();
+    else if (t.id === 'btnPatch') { patchBox('<p class="meta">Escolha o .bin do jogo…</p>'); native.applyPatch(); }
     else if (t.id === 'btnApply') { t.disabled = true; t.textContent = 'Atualizando…'; native.applyUpdate(t.dataset.url); }
     else if (t.id === 'updBadge') { showSettings(); checkUpdate(); }
     else if (t.dataset.duelist) showDuelist(+t.dataset.duelist, t.dataset.rank);

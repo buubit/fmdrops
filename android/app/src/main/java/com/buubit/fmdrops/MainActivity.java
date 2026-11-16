@@ -5,7 +5,9 @@ import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.database.Cursor;
 import android.net.Uri;
+import android.provider.OpenableColumns;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -37,6 +39,8 @@ import java.util.Iterator;
  */
 public class MainActivity extends Activity {
     private static final int PICK_FILE = 1;
+    private static final int PATCH_IMAGE = 2, PATCH_PPF = 3, PATCH_OUT = 4;
+    private Uri patchImage, patchPpf;
     private static final String HOST = "app.fmdrops";
     private static final String HOME = "https://" + HOST + "/index.html";
     private static final String UPDATE_PREFIX = "https://github.com/buubit/fmdrops/releases/download/";
@@ -190,6 +194,12 @@ public class MainActivity extends Activity {
             return BuildConfig.SHELL;
         }
 
+        /** Escolhe a imagem do jogo, o .ppf e onde salvar; depois aplica o patch. */
+        @JavascriptInterface
+        public void applyPatch() {
+            ui.post(() -> pick(PATCH_IMAGE));
+        }
+
         @JavascriptInterface
         public void applyUpdate(final String address) {
             new Thread(() -> {
@@ -204,8 +214,66 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void pick(int request) {
+        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.setType("*/*");
+        startActivityForResult(i, request);
+    }
+
+    private String displayName(Uri uri) {
+        try (Cursor c = getContentResolver().query(uri, new String[] { OpenableColumns.DISPLAY_NAME }, null, null, null)) {
+            if (c != null && c.moveToFirst()) return c.getString(0);
+        } catch (Exception ignored) { }
+        return "jogo.bin";
+    }
+
+    private void js(String fn, String arg) {
+        ui.post(() -> web.evaluateJavascript("window." + fn + " && window." + fn + "(" + arg + ")", null));
+    }
+
+    private void onPatchResult(int request, int result, Intent data) {
+        if (result != RESULT_OK || data == null || data.getData() == null) {
+            js("onPatchState", JSONObject.quote("cancelado"));
+            return;
+        }
+        Uri uri = data.getData();
+        if (request == PATCH_IMAGE) {
+            patchImage = uri;
+            js("onPatchState", JSONObject.quote("imagem: " + displayName(uri) + ". Agora escolha o arquivo .ppf"));
+            pick(PATCH_PPF);
+        } else if (request == PATCH_PPF) {
+            patchPpf = uri;
+            String base = displayName(patchImage).replaceAll("\\.(bin|BIN|iso|img)$", "");
+            String mod = displayName(uri).replaceAll("\\.(ppf|PPF)$", "");
+            js("onPatchState", JSONObject.quote("patch: " + displayName(uri) + ". Agora escolha onde salvar"));
+            Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+            i.addCategory(Intent.CATEGORY_OPENABLE);
+            i.setType("application/octet-stream");
+            i.putExtra(Intent.EXTRA_TITLE, (mod.equals(base) ? base + " (mod)" : base + " - " + mod) + ".bin");
+            startActivityForResult(i, PATCH_OUT);
+        } else {
+            final Uri out = uri, img = patchImage, ppf = patchPpf;
+            final String name = displayName(out);
+            new Thread(() -> {
+                try {
+                    final long[] lastSent = { 0 };
+                    PatchJob.run(getContentResolver(), img, ppf, out, f -> {
+                        long now = System.currentTimeMillis();
+                        if (now - lastSent[0] > 250) { lastSent[0] = now; js("onPatchProgress", String.valueOf(f)); }
+                    });
+                    js("onPatchDone", JSONObject.quote(name));
+                } catch (Exception e) {
+                    try { android.provider.DocumentsContract.deleteDocument(getContentResolver(), out); } catch (Exception ignored) { }
+                    js("onPatchError", JSONObject.quote(String.valueOf(e.getMessage())));
+                }
+            }).start();
+        }
+    }
+
     @Override
     protected void onActivityResult(int request, int result, Intent data) {
+        if (request >= PATCH_IMAGE && request <= PATCH_OUT) { onPatchResult(request, result, data); return; }
         if (request != PICK_FILE || pending == null) return;
         Uri[] uris = null;
         if (result == RESULT_OK && data != null) {

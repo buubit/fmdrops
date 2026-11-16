@@ -386,7 +386,8 @@ def cmd_ppf(orig_path, mod_path, out, desc):
     b = open(mod_path, "rb").read()
     if len(a) != len(b):
         sys.exit("As imagens precisam ter o mesmo tamanho.")
-    head = b"PPF30" + bytes([2]) + desc.encode("ascii", "replace")[:50].ljust(50, b" ") + bytes([0, 0, 0, 0])
+    # PPF3 com undo: cada registro leva também os bytes originais, assim quem aplica confere a versão.
+    head = b"PPF30" + bytes([2]) + desc.encode("ascii", "replace")[:50].ljust(50, b" ") + bytes([0, 0, 1, 0])
     recs = bytearray()
     i, n = 0, len(a)
     while i < n:
@@ -401,7 +402,7 @@ def cmd_ppf(orig_path, mod_path, out, desc):
         j = i
         while j < n and j - i < 255 and a[j] != b[j]:
             j += 1
-        recs += struct.pack("<QB", i, j - i) + b[i:j]
+        recs += struct.pack("<QB", i, j - i) + b[i:j] + a[i:j]
         i = j
     open(out, "wb").write(head + recs)
     print(f"patch {out}: {len(head) + len(recs)} bytes")
