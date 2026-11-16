@@ -111,11 +111,11 @@
       throw new Error('Não parece uma imagem de CD válida (.bin ou .iso).');
     }
 
-    var found = {};
-    async function walk(lba, size, depth) {
+    var all = [];
+    async function walk(lba, size, depth, path) {
       var dir = await sectors(lba, Math.ceil(size / 2048));
       var p = 0;
-      while (p < size) {
+      while (p < size && p < dir.length) {
         var len = dir[p];
         if (len === 0) { p = (Math.floor(p / 2048) + 1) * 2048; continue; }
         var ext = u32(dir, p + 2), sz = u32(dir, p + 10), flags = dir[p + 25];
@@ -123,18 +123,37 @@
         for (var i = 0; i < nlen; i++) name += String.fromCharCode(dir[p + 33 + i]);
         name = name.replace(/;\d+$/, '').toUpperCase();
         if (flags & 2) {
-          if (nlen > 1 && depth < 3) await walk(ext, sz, depth + 1);
-        } else if (/^S[LC][UEP][SM]_\d{3}\.\d{2}$/.test(name)) {
-          found.slus = { lba: ext, size: sz, name: name };
-        } else if (name === 'WA_MRG.MRG') {
-          found.mrg = { lba: ext, size: sz, name: name };
+          if (name.length > 1 && depth < 4 && ext !== lba) await walk(ext, sz, depth + 1, path + name + '/');
+        } else {
+          all.push({ lba: ext, size: sz, name: name, path: path + name });
         }
         p += len;
       }
     }
-    await walk(u32(pvd, 156 + 2), u32(pvd, 156 + 10), 0);
+    await walk(u32(pvd, 156 + 2), u32(pvd, 156 + 10), 0, '');
+
+    function pick(test) { return all.filter(test).sort(function (x, y) { return y.size - x.size; })[0]; }
+    var found = {};
+    // Executável: o que o SYSTEM.CNF manda dar boot; senão, o nome padrão SLUS_xxx.xx.
+    var cnf = pick(function (f) { return f.name === 'SYSTEM.CNF'; });
+    if (cnf) {
+      var raw0 = await sectors(cnf.lba, 1), txt = '';
+      for (var c = 0; c < Math.min(cnf.size, 2048); c++) txt += String.fromCharCode(raw0[c]);
+      var m = /BOOT\s*=\s*cdrom:\\*([^;\s]+)/i.exec(txt);
+      if (m) {
+        var boot = m[1].toUpperCase().split('\\').pop();
+        found.slus = pick(function (f) { return f.name === boot; });
+      }
+    }
+    if (!found.slus) found.slus = pick(function (f) { return /^S[LC][UEP][SM]_\d{3}\.\d{2}$/.test(f.name); });
+    // Dados: WA_MRG.MRG; senão qualquer .MRG; senão o maior arquivo grande o bastante.
+    found.mrg = pick(function (f) { return f.name === 'WA_MRG.MRG'; }) ||
+      pick(function (f) { return /\.MRG$/.test(f.name); }) ||
+      pick(function (f) { return f.size >= OFF.mrgCosts + CARDS * 8 && f !== found.slus; });
     if (!found.slus || !found.mrg) {
-      throw new Error('Não achei SLUS_014.11 e WA_MRG.MRG dentro da imagem.');
+      throw new Error('Não achei ' + (!found.slus ? 'o executável (SLUS_014.11) ' : '') +
+        (!found.mrg ? 'o WA_MRG.MRG ' : '') + 'dentro da imagem. Arquivos encontrados (' + all.length + '): ' +
+        all.slice(0, 40).map(function (f) { return f.path + ' ' + Math.round(f.size / 1024) + 'KB'; }).join(', '));
     }
 
     function fileReader(f) {
