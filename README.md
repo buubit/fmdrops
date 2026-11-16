@@ -67,3 +67,22 @@ As chances são em 2048 avos por tabela.
 ## Aviso
 
 Projeto de fã, sem vínculo com a Konami. Use com a sua própria cópia do jogo.
+
+## Mod (tools/fmmod.py)
+
+Editor que grava alterações direto na imagem `.bin` e recalcula EDC/ECC dos setores
+alterados. As receitas ficam em `mod/`:
+
+| Receita | O que faz |
+|---|---|
+| `mod/normal.json` | Megamorph também em S/A POW, com a mesma chance que já tinha em S/A TEC |
+| `mod/dificil.json` | O mesmo + decks dos duelistas puxando mais os monstros fortes que cada um já usa |
+
+```
+python3 tools/fmmod.py check jogo.bin
+python3 tools/fmmod.py show  jogo.bin "Megamorph"
+python3 tools/fmmod.py build jogo.bin mod.bin mod/normal.json
+python3 tools/fmmod.py ppf   jogo.bin mod.bin mod.ppf
+```
+
+O `.ppf` é pequeno e não contém o jogo: só as diferenças. O DuckStation aplica o patch ao abrir.

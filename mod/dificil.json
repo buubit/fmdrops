@@ -1,0 +1,6 @@
+{
+  "drops": [
+    {"card": "Megamorph", "duelist": "all", "pool": "pow", "copy_from": "tec"}
+  ],
+  "hard_decks": 2.0
+}
