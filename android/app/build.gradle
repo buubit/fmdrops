@@ -1,0 +1,36 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'com.buubit.fmdrops'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.buubit.fmdrops'
+        minSdk 26
+        targetSdk 35
+        versionCode((System.getenv('GITHUB_RUN_NUMBER') ?: '1') as int)
+        versionName '0.1.' + (System.getenv('GITHUB_RUN_NUMBER') ?: '0')
+    }
+
+    // Chave fixa (e pública) só para o APK de uso pessoal poder ser atualizado por cima do anterior.
+    signingConfigs {
+        fixed {
+            storeFile file('fmdrops.keystore')
+            storePassword 'fmdrops'
+            keyAlias 'fmdrops'
+            keyPassword 'fmdrops'
+        }
+    }
+    buildTypes {
+        debug { signingConfig signingConfigs.fixed }
+        release { signingConfig signingConfigs.fixed; minifyEnabled false }
+    }
+
+    // O app em si é a pasta /web do repositório.
+    sourceSets { main { assets.srcDirs = ['../../web'] } }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

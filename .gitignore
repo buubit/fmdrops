@@ -1,0 +1,15 @@
+# Nunca versionar o jogo nem nada extraído dele
+*.bin
+*.cue
+*.iso
+*.7z
+*.zip
+*.MRG
+SLUS_*
+drops.json
+
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+node_modules/
