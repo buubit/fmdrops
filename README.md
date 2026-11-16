@@ -77,6 +77,10 @@ alterados. As receitas ficam em `mod/`:
 |---|---|
 | `mod/normal.json` | Megamorph também em S/A POW, com a mesma chance que já tinha em S/A TEC |
 | `mod/dificil.json` | O mesmo + decks dos duelistas puxando mais os monstros fortes que cada um já usa |
+| `mod/original.json` | Sobre o jogo **original**: 100 cartas por duelo, as 82 cartas que ninguém dropava distribuídas por duelistas temáticos, Megamorph em S/A POW |
+| `mod/original-dificil.json` | O mesmo + decks difíceis |
+
+As receitas `dificil`/`normal` são para o build Drop 100; as `original*` exigem o `SLUS_014.11` sem modificação.
 
 ```
 python3 tools/fmmod.py check jogo.bin

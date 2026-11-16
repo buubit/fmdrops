@@ -1,0 +1,1099 @@
+{
+ "_descricao": "Mod próprio sobre o jogo ORIGINAL (SLUS_014.11): 100 cartas por duelo, todas as 722 cartas dropáveis, Megamorph em S/A POW. Decks dos duelistas mais fortes (difícil).",
+ "multi_drop": 100,
+ "add_drops": [
+  {
+   "card": 7,
+   "_nome": "Winged Dragon #1",
+   "duelists": [
+    "Simon Muran",
+    "Villager3"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 17,
+   "_nome": "Right Leg of the Forbidden One",
+   "duelists": [
+    "Simon Muran",
+    "Shadi"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 18,
+   "_nome": "Left Leg of the Forbidden One",
+   "duelists": [
+    "Simon Muran",
+    "Shadi"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 22,
+   "_nome": "Summoned Skull",
+   "duelists": [
+    "Yami Bakura",
+    "Desert Mage"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 28,
+   "_nome": "Rock Ogre Grotto #1",
+   "duelists": [
+    "Teana",
+    "Seto"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 37,
+   "_nome": "Gaia the Dragon Champion",
+   "duelists": [
+    "Pegasus",
+    "Heishin 2nd"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 51,
+   "_nome": "Armored Lizard",
+   "duelists": [
+    "Rex Raptor",
+    "Mountain Mage"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 16
+  },
+  {
+   "card": 52,
+   "_nome": "Hercules Beetle",
+   "duelists": [
+    "Weevil Underwood",
+    "Forest Mage"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 16
+  },
+  {
+   "card": 56,
+   "_nome": "Larvae Moth",
+   "duelists": [
+    "Weevil Underwood",
+    "Forest Mage"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 57,
+   "_nome": "Great Moth",
+   "duelists": [
+    "Weevil Underwood",
+    "High Mage Anubisius"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 60,
+   "_nome": "Great White",
+   "duelists": [
+    "Ocean Mage",
+    "High Mage Secmeton"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 16
+  },
+  {
+   "card": 62,
+   "_nome": "Harpie Lady",
+   "duelists": [
+    "Mai Valentine",
+    "Meadow Mage"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 63,
+   "_nome": "Harpie Lady Sisters",
+   "duelists": [
+    "Mai Valentine",
+    "High Mage Kepura"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 16
+  },
+  {
+   "card": 64,
+   "_nome": "Tiger Axe",
+   "duelists": [
+    "Jono",
+    "Rex Raptor"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 67,
+   "_nome": "Perfectly Ultimate Great Moth",
+   "duelists": [
+    "Weevil Underwood",
+    "Nitemare"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 69,
+   "_nome": "Thousand Dragon",
+   "duelists": [
+    "Rex Raptor",
+    "High Mage Martis"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 72,
+   "_nome": "Cocoon of Evolution",
+   "duelists": [
+    "Weevil Underwood",
+    "Forest Mage"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 92,
+   "_nome": "Rabid Horseman",
+   "duelists": [
+    "Mage Soldier",
+    "Mountain Mage"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 16
+  },
+  {
+   "card": 217,
+   "_nome": "B. Skull Dragon",
+   "duelists": [
+    "Duel Master K",
+    "Seto 3rd"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 235,
+   "_nome": "Wodan the Resident of the Forest",
+   "duelists": [
+    "Villager1",
+    "Weevil Underwood"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 252,
+   "_nome": "Nekogal #1",
+   "duelists": [
+    "Villager2",
+    "Mai Valentine"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 278,
+   "_nome": "Petit Moth",
+   "duelists": [
+    "Weevil Underwood",
+    "Forest Mage"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 284,
+   "_nome": "Tao the Chanter",
+   "duelists": [
+    "Villager3",
+    "Bandit Keith"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 288,
+   "_nome": "Dark Artist",
+   "duelists": [
+    "Seto",
+    "Simon Muran"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 299,
+   "_nome": "Sonic Maid",
+   "duelists": [
+    "Rex Raptor",
+    "Teana"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 318,
+   "_nome": "Elegant Egotist",
+   "duelists": [
+    "High Mage Secmeton",
+    "Seto 2nd"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 348,
+   "_nome": "Swords of Revealing Light",
+   "duelists": [
+    "High Mage Anubisius",
+    "Guardian Sebek"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 351,
+   "_nome": "Yaranzo",
+   "duelists": [
+    "Weevil Underwood",
+    "Jono"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 352,
+   "_nome": "Kanan the Swordmistress",
+   "duelists": [
+    "Mai Valentine",
+    "Villager1"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 353,
+   "_nome": "Takriminos",
+   "duelists": [
+    "Jono 2nd",
+    "Desert Mage"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 16
+  },
+  {
+   "card": 354,
+   "_nome": "Stuffed Animal",
+   "duelists": [
+    "Bandit Keith",
+    "Villager2"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 355,
+   "_nome": "Megasonic Eye",
+   "duelists": [
+    "Teana 2nd",
+    "Meadow Mage"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 16
+  },
+  {
+   "card": 356,
+   "_nome": "Super War-lion",
+   "duelists": [
+    "High Mage Atenza",
+    "Guardian Neku"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 357,
+   "_nome": "Yamadron",
+   "duelists": [
+    "High Mage Martis",
+    "Heishin 2nd"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 358,
+   "_nome": "Seiyaryu",
+   "duelists": [
+    "High Mage Kepura",
+    "Seto 3rd"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 359,
+   "_nome": "Three-legged Zombies",
+   "duelists": [
+    "Simon Muran",
+    "Villager3"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 360,
+   "_nome": "Zera The Mant",
+   "duelists": [
+    "Seto 2nd",
+    "DarkNite"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 361,
+   "_nome": "Flying Penguin",
+   "duelists": [
+    "Teana",
+    "Seto"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 362,
+   "_nome": "Millennium Shield",
+   "duelists": [
+    "Guardian Sebek",
+    "Nitemare"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 363,
+   "_nome": "Fairy's Gift",
+   "duelists": [
+    "Jono",
+    "Rex Raptor"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 364,
+   "_nome": "Black Luster Soldier",
+   "duelists": [
+    "Duel Master K",
+    "Nitemare"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 365,
+   "_nome": "Fiend's Mirror",
+   "duelists": [
+    "Guardian Neku",
+    "Duel Master K"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 369,
+   "_nome": "Wall Shadow",
+   "duelists": [
+    "Ocean Mage",
+    "Labyrinth Mage"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 16
+  },
+  {
+   "card": 374,
+   "_nome": "Gate Guardian",
+   "duelists": [
+    "Guardian Sebek",
+    "Guardian Neku"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 380,
+   "_nome": "Blue-eyes Ultimate Dragon",
+   "duelists": [
+    "Seto 3rd",
+    "Kaiba"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 428,
+   "_nome": "Magician of Faith",
+   "duelists": [
+    "Villager1",
+    "Weevil Underwood"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 429,
+   "_nome": "Goddess of Whim",
+   "duelists": [
+    "Villager2",
+    "Mai Valentine"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 489,
+   "_nome": "Barrel Lily",
+   "duelists": [
+    "Villager3",
+    "Bandit Keith"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 499,
+   "_nome": "Kattapillar",
+   "duelists": [
+    "Weevil Underwood",
+    "Forest Mage"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 537,
+   "_nome": "Mega Thunderball",
+   "duelists": [
+    "Seto",
+    "Simon Muran"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 541,
+   "_nome": "Hane-Hane",
+   "duelists": [
+    "Rex Raptor",
+    "Teana"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 545,
+   "_nome": "Skelgon",
+   "duelists": [
+    "Forest Mage",
+    "Shadi"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 16
+  },
+  {
+   "card": 554,
+   "_nome": "Lava Battleguard",
+   "duelists": [
+    "Mountain Mage",
+    "High Mage Atenza"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 16
+  },
+  {
+   "card": 555,
+   "_nome": "Tyhone #2",
+   "duelists": [
+    "Mountain Mage",
+    "Yami Bakura"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 16
+  },
+  {
+   "card": 562,
+   "_nome": "Needle Worm",
+   "duelists": [
+    "Weevil Underwood",
+    "Forest Mage"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 603,
+   "_nome": "Fairy Dragon",
+   "duelists": [
+    "Meadow Mage",
+    "Teana 2nd"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 628,
+   "_nome": "Witch's Apprentice",
+   "duelists": [
+    "Weevil Underwood",
+    "Jono"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 640,
+   "_nome": "Acid Crawler",
+   "duelists": [
+    "Weevil Underwood",
+    "Forest Mage"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 644,
+   "_nome": "Flame Viper",
+   "duelists": [
+    "Mai Valentine",
+    "Villager1"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 24
+  },
+  {
+   "card": 667,
+   "_nome": "Gate Guardian Ritual",
+   "duelists": [
+    "Guardian Sebek",
+    "Guardian Neku"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 669,
+   "_nome": "Shadow Spell",
+   "duelists": [
+    "Heishin 2nd",
+    "Pegasus"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 670,
+   "_nome": "Black Luster Ritual",
+   "duelists": [
+    "Duel Master K",
+    "Nitemare"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 689,
+   "_nome": "Reverse Trap",
+   "duelists": [
+    "Seto 3rd",
+    "Kaiba"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 696,
+   "_nome": "Javelin Beetle Pact",
+   "duelists": [
+    "Weevil Underwood",
+    "High Mage Anubisius"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 701,
+   "_nome": "Performance of Sword",
+   "duelists": [
+    "DarkNite",
+    "High Mage Secmeton"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 702,
+   "_nome": "Hungry Burger",
+   "duelists": [
+    "Nitemare",
+    "High Mage Anubisius"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 703,
+   "_nome": "Sengenjin",
+   "duelists": [
+    "Mountain Mage",
+    "High Mage Atenza"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 704,
+   "_nome": "Skull Guardian",
+   "duelists": [
+    "Desert Mage",
+    "High Mage Martis"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 705,
+   "_nome": "Tri-horned Dragon",
+   "duelists": [
+    "Duel Master K",
+    "High Mage Atenza"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 706,
+   "_nome": "Serpent Night Dragon",
+   "duelists": [
+    "Pegasus",
+    "High Mage Martis"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 708,
+   "_nome": "Cosmo Queen",
+   "duelists": [
+    "Meadow Mage",
+    "High Mage Kepura"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 709,
+   "_nome": "Chakra",
+   "duelists": [
+    "Kaiba",
+    "High Mage Kepura"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 710,
+   "_nome": "Crab Turtle",
+   "duelists": [
+    "Ocean Mage",
+    "High Mage Secmeton"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 711,
+   "_nome": "Mikazukinoyaiba",
+   "duelists": [
+    "Desert Mage",
+    "Isis"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 16
+  },
+  {
+   "card": 715,
+   "_nome": "Psycho-Puppet",
+   "duelists": [
+    "High Mage Secmeton",
+    "Seto 2nd"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 716,
+   "_nome": "Garma Sword",
+   "duelists": [
+    "High Mage Anubisius",
+    "Guardian Sebek"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 717,
+   "_nome": "Javelin Beetle",
+   "duelists": [
+    "Weevil Underwood",
+    "High Mage Anubisius"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 718,
+   "_nome": "Fortress Whale",
+   "duelists": [
+    "Ocean Mage",
+    "High Mage Secmeton"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 719,
+   "_nome": "Dokurorider",
+   "duelists": [
+    "High Mage Atenza",
+    "Guardian Neku"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 720,
+   "_nome": "Mask of Shine & Dark",
+   "duelists": [
+    "High Mage Martis",
+    "Heishin 2nd"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 721,
+   "_nome": "Dark Magic Ritual",
+   "duelists": [
+    "Isis",
+    "DarkNite"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  },
+  {
+   "card": 722,
+   "_nome": "Magician of Black Chaos",
+   "duelists": [
+    "Isis",
+    "DarkNite"
+   ],
+   "pools": [
+    "pow",
+    "tec"
+   ],
+   "rate": 10
+  }
+ ],
+ "drops": [
+  {
+   "card": "Megamorph",
+   "duelist": "Pegasus",
+   "pool": "pow",
+   "rate": 64
+  },
+  {
+   "card": "Megamorph",
+   "duelist": "DarkNite",
+   "pool": "pow",
+   "rate": 48
+  },
+  {
+   "card": "Megamorph",
+   "duelist": "Heishin 2nd",
+   "pool": "pow",
+   "rate": 24
+  },
+  {
+   "card": "Megamorph",
+   "duelist": "Heishin",
+   "pool": "pow",
+   "rate": 16
+  }
+ ],
+ "hard_decks": 2.0
+}

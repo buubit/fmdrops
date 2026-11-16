@@ -25,6 +25,11 @@ Receita (JSON):
   Reescala o deck de cada duelista para favorecer os monstros mais fortes que ele
   já usa (peso x (ATK/1000)^n). Não coloca cartas novas no deck.
 
+    "multi_drop": 100
+  Cartas por duelo vencido (só no executável original SLUS_014.11). Usa uma rotina
+  de 27 instruções, gravada num trecho de código que o jogo não chama (0x80060E70):
+  entrega a carta normal e sorteia mais N-1 na mesma tabela de drop do rank.
+
 Também gera um patch .ppf com as diferenças (python3 tools/fmmod.py ppf original.bin mod.bin saida.ppf).
 """
 import json
@@ -171,6 +176,38 @@ class Image:
         return len(self.dirty)
 
 
+# ---------------------------------------------------------------- código
+CALL_SITE = 0x80021F14          # jal Duel_AwardCard depois do duelo
+AWARD_CARD = 0x80021894
+ROUTINE = 0x80060E70            # função sem nenhuma chamada no executável original
+ROUTINE_RETAIL_HEAD = bytes.fromhex("c0ffbd272400b3af219880003400b7af")
+# addiu sp,-0x18; sw ra; sw s0; jal Award(a0); li s0,N-1
+# loop: pool = rank (S/A TEC=2 se venceu por técnica, B/C/D=1 se rank baixo, senão S/A POW=0)
+#       carta = Duel_SelectCardDrop(pool); if carta: Duel_AwardCard(carta); s0--; bnez loop
+ROUTINE_CODE = ("e8ffbd271400bfaf1000b0af2586000c{count}1024e002838f0000000039006290380063902b1002000300632c"
+                "0200601040200200010004240486000c0000000003004010000000002586000c25204000ffff1026efff0016"
+                "000000001400bf8f1000b08f0800e0031800bd27")
+
+
+def jal(addr):
+    return struct.pack("<I", 0x0C000000 | ((addr >> 2) & 0x3FFFFFF))
+
+
+def patch_multi_drop(img, count):
+    if not 2 <= count <= 999:
+        sys.exit("multi_drop precisa ser de 2 a 999")
+    head = img.read(img.slus, 0, 0x800)
+    t_addr = struct.unpack_from("<I", head, 0x18)[0]
+    off = lambda ram: ram - t_addr + 0x800
+    if img.read(img.slus, off(CALL_SITE), 4) != jal(AWARD_CARD) or \
+            img.read(img.slus, off(ROUTINE), 16) != ROUTINE_RETAIL_HEAD:
+        sys.exit("multi_drop: o executável não é o original (SLUS_014.11 sem modificação).")
+    code = bytes.fromhex(ROUTINE_CODE.format(count=struct.pack("<H", count - 1).hex()))
+    img.write(img.slus, off(ROUTINE), code)
+    img.write(img.slus, off(CALL_SITE), jal(ROUTINE))
+    print(f"{count} cartas por duelo vencido")
+
+
 # ---------------------------------------------------------------- dados do jogo
 CHARS = {0x18: 'A', 0x2D: 'B', 0x2B: 'C', 0x20: 'D', 0x25: 'E', 0x31: 'F', 0x29: 'G', 0x23: 'H', 0x1A: 'I',
          0x3B: 'J', 0x33: 'K', 0x2A: 'L', 0x1E: 'M', 0x2C: 'N', 0x21: 'O', 0x2F: 'P', 0x3E: 'Q', 0x26: 'R',
@@ -276,6 +313,16 @@ def cmd_show(img, query):
 def cmd_build(img, out, recipe_path):
     g = Game(img)
     recipe = json.load(open(recipe_path, encoding="utf-8"))
+    if recipe.get("multi_drop"):
+        patch_multi_drop(img, int(recipe["multi_drop"]))
+    for step in recipe.get("add_drops", []):
+        cid = g.card_id(step["card"])
+        for dn in step["duelists"]:
+            for d in g.duelist_ids(dn):
+                for pool in step["pools"]:
+                    if g.table(d, pool)[cid - 1] < step["rate"]:
+                        g.set_rate(d, pool, cid, step["rate"])
+        print(f"{g.cards[cid - 1]}: {', '.join(step['duelists'])} ({'/'.join(POOL_NAMES[p] for p in step['pools'])}) {step['rate']}/2048")
     for step in recipe.get("drops", []):
         cid = g.card_id(step["card"])
         for d in g.duelist_ids(step["duelist"]):
