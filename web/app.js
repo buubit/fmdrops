@@ -270,7 +270,7 @@
       '<div class="stack"><button id="btnImport">Importar outra imagem / mod</button>' +
       (game ? '<button id="btnClear" class="secondary">Apagar dados do app</button>' : '') + '</div>' +
       (native && native.applyPatch ? '<h3>Aplicar mod no jogo</h3><p class="meta">Gera um .bin novo com o patch (.ppf) aplicado, para abrir no DuckStation. ' +
-        'Você escolhe: 1) o .bin do jogo, 2) o .ppf, 3) onde salvar. O jogo original não é alterado.</p>' +
+        'Você escolhe: 1) o .bin do jogo, 2) o .ppf. Ele grava o .bin e o .cue na pasta de jogos. O jogo original não é alterado.</p>' +
         '<div class="stack patchbox"><button id="btnPatch">Aplicar patch .ppf</button></div>' : '') +
       '<h3>Atualização do app</h3><p class="meta">Versão instalada: build ' + BUILD + '</p>' +
       '<div id="update" class="stack"><button id="btnUpdate" class="secondary">Procurar atualização</button></div>');
@@ -323,9 +323,10 @@
     patchBox('<progress max="1" value="' + f + '"></progress><p class="meta">Gravando… ' + Math.round(f * 100) + '%</p>');
   };
   window.onPatchDone = function (name) {
-    patchBox('<p class="note"><b>Pronto!</b> ' + esc(name) + ' foi salvo. No DuckStation, abra esse arquivo (Start File ou Scan For New Games). ' +
+    patchBox('<p class="note"><b>Pronto!</b> ' + esc(name) + ' e o .cue foram salvos. No DuckStation: menu → <b>Scan For New Games</b>. ' +
       'Use um cartão de memória novo se mudou a base do jogo.</p>');
   };
+  window.onOutputFolder = function (label) { var el = $('outFolder'); if (el) el.textContent = label; };
   window.onPatchError = function (msg) {
     patchBox('<p class="error">Não deu certo: ' + esc(msg) + '</p><button id="btnPatch" class="secondary">Tentar de novo</button>');
   };
@@ -383,6 +384,8 @@
       '<div class="seg">' + diffs.map(function (d) {
         return '<button data-diff="' + d[0] + '" aria-pressed="' + (modOpts.difficulty === d[0]) + '">' + d[1] + '</button>';
       }).join('') + '</div></div>' +
+      (native && native.outputFolder ? '<p class="meta">Pasta dos jogos: <b id="outFolder">' + (esc(native.outputFolder()) || 'escolhida ao gerar') +
+        '</b> · <button class="linkbtn" id="btnOutFolder">trocar</button></p>' : '') +
       '<div class="stack patchbox">' + (mod.busy ? '<p class="meta">Gerando…</p>' :
         '<button id="btnModBuild">' + (native && native.buildImage ? 'Gerar .bin modificado' : 'Baixar patch .ppf') + '</button>') + '</div>';
   }
@@ -412,11 +415,11 @@
       var log = FMMod.apply(ed, modOpts);
       if (!ed.writes.length) throw new Error('nada para mudar: a base já está com essas opções');
       var res = await FMMod.buildPatch(ed);
-      var base = (mod.blob.name || 'jogo').replace(/\.(bin|BIN)$/, '');
+      var base = (mod.blob.name || 'jogo').replace(/\.(bin|BIN)$/, '').replace(/ - FM Drops.*$/, '');
       var tag = [modOpts.drops > 1 ? modOpts.drops + ' cartas' : '', modOpts.difficulty !== 'normal' ? modOpts.difficulty : ''].filter(Boolean).join(' ');
       var name = base + ' - FM Drops' + (tag ? ' (' + tag + ')' : '') + '.bin';
       mod.busy = false; render();
-      patchBox('<p class="meta">' + esc(log.join(' · ')) + '</p><p class="meta">Escolha onde salvar o .bin…</p>');
+      patchBox('<p class="meta">' + esc(log.join(' · ')) + '</p>');
       if (native && native.buildImage) native.buildImage(toBase64(res.ppf), name);
       else {
         var a = document.createElement('a');
@@ -490,6 +493,7 @@
     else if (/^tab(Cards|Fusions|Duelists|Mod)$/.test(t.id)) { view = t.id.slice(3).toLowerCase(); window.scrollTo(0, 0); render(); }
     else if (t.id === 'btnModPick') { $('modFile').value = ''; $('modFile').click(); }
     else if (t.id === 'btnModBuild') modBuild();
+    else if (t.id === 'btnOutFolder') native.chooseOutputFolder();
     else if (t.dataset.preset) {
       var pr = FMMod.PRESETS[t.dataset.preset];
       Object.keys(pr).forEach(function (k) { if (!(mod.caps && ['drops', 'starchips', 'lp'].indexOf(k) >= 0 && mod.caps[k] == null)) modOpts[k] = pr[k]; });

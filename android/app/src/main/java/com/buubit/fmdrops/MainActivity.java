@@ -39,7 +39,10 @@ import java.util.Iterator;
  */
 public class MainActivity extends Activity {
     private static final int PICK_FILE = 1;
-    private static final int PATCH_IMAGE = 2, PATCH_PPF = 3, PATCH_OUT = 4, BUILD_OUT = 5;
+    private static final int PATCH_IMAGE = 2, PATCH_PPF = 3, PATCH_OUT = 4, BUILD_OUT = 5, TREE_OUT = 6;
+    private Uri jobImage;
+    private Object jobPpf;
+    private String jobName;
     private Uri patchImage, patchPpf, lastImage;
     private byte[] buildPpf;
     private static final String HOST = "app.fmdrops";
@@ -209,13 +212,21 @@ public class MainActivity extends Activity {
                 return;
             }
             buildPpf = android.util.Base64.decode(ppfBase64, android.util.Base64.DEFAULT);
-            ui.post(() -> {
-                Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-                i.addCategory(Intent.CATEGORY_OPENABLE);
-                i.setType("application/octet-stream");
-                i.putExtra(Intent.EXTRA_TITLE, suggestedName);
-                startActivityForResult(i, BUILD_OUT);
-            });
+            final Uri img = lastImage;
+            final byte[] ppf = buildPpf;
+            ui.post(() -> startOutput(img, ppf, suggestedName));
+        }
+
+        /** Nome da pasta onde os jogos gerados são gravados ("" se ainda não escolhida). */
+        @JavascriptInterface
+        public String outputFolder() {
+            Uri t = savedTree();
+            return t == null ? "" : treeLabel(t);
+        }
+
+        @JavascriptInterface
+        public void chooseOutputFolder() {
+            ui.post(() -> { jobImage = null; askTree(); });
         }
 
         @JavascriptInterface
@@ -250,7 +261,7 @@ public class MainActivity extends Activity {
         ui.post(() -> web.evaluateJavascript("window." + fn + " && window." + fn + "(" + arg + ")", null));
     }
 
-    private void runJob(final Uri img, final Object ppf, final Uri out) {
+    private void runJob(final Uri img, final Object ppf, final Uri out, final Uri cue) {
         final String name = displayName(out);
         new Thread(() -> {
             try {
@@ -261,12 +272,84 @@ public class MainActivity extends Activity {
                 };
                 if (ppf instanceof Uri) PatchJob.run(getContentResolver(), img, (Uri) ppf, out, pr);
                 else PatchJob.run(getContentResolver(), img, (byte[]) ppf, out, pr);
+                if (cue != null) {
+                    String sheet = "FILE \"" + name + "\" BINARY\r\n  TRACK 01 MODE2/2352\r\n    INDEX 01 00:00:00\r\n";
+                    try (java.io.OutputStream os = getContentResolver().openOutputStream(cue, "wt")) {
+                        os.write(sheet.getBytes(StandardCharsets.UTF_8));
+                    }
+                }
                 js("onPatchDone", JSONObject.quote(name));
             } catch (Exception e) {
                 try { android.provider.DocumentsContract.deleteDocument(getContentResolver(), out); } catch (Exception ignored) { }
                 js("onPatchError", JSONObject.quote(String.valueOf(e.getMessage())));
             }
         }).start();
+    }
+
+    private Uri savedTree() {
+        String t = getSharedPreferences("fm", MODE_PRIVATE).getString("outTree", null);
+        if (t == null) return null;
+        Uri u = Uri.parse(t);
+        for (android.content.UriPermission p : getContentResolver().getPersistedUriPermissions()) {
+            if (p.getUri().equals(u) && p.isWritePermission()) return u;
+        }
+        return null;
+    }
+
+    private String treeLabel(Uri tree) {
+        String id = android.provider.DocumentsContract.getTreeDocumentId(tree);
+        return id.contains(":") ? id.substring(id.indexOf(':') + 1) : id;
+    }
+
+    private void askTree() {
+        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        js("onPatchState", JSONObject.quote("Escolha a pasta de jogos do DuckStation (só na primeira vez)"));
+        startActivityForResult(i, TREE_OUT);
+    }
+
+    /** Arquivo `name` dentro da pasta: reaproveita se já existir (sobrescreve), senão cria. */
+    private Uri fileIn(Uri tree, String name) throws Exception {
+        android.content.ContentResolver cr = getContentResolver();
+        String dirId = android.provider.DocumentsContract.getTreeDocumentId(tree);
+        Uri children = android.provider.DocumentsContract.buildChildDocumentsUriUsingTree(tree, dirId);
+        try (Cursor c = cr.query(children, new String[] {
+                android.provider.DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                android.provider.DocumentsContract.Document.COLUMN_DISPLAY_NAME }, null, null, null)) {
+            while (c != null && c.moveToNext()) {
+                if (name.equals(c.getString(1))) return android.provider.DocumentsContract.buildDocumentUriUsingTree(tree, c.getString(0));
+            }
+        }
+        Uri dir = android.provider.DocumentsContract.buildDocumentUriUsingTree(tree, dirId);
+        Uri made = android.provider.DocumentsContract.createDocument(cr, dir, "application/octet-stream", name);
+        if (made == null) throw new Exception("não consegui criar " + name);
+        return made;
+    }
+
+    /** Grava <nome>.bin e <nome>.cue na pasta de jogos escolhida (pergunta a pasta na primeira vez). */
+    private void startOutput(Uri img, Object ppf, String name) {
+        Uri tree = savedTree();
+        if (tree == null) {
+            jobImage = img; jobPpf = ppf; jobName = name;
+            askTree();
+            return;
+        }
+        jobImage = null;
+        try {
+            String bin = name.replaceAll("[\\\\/:*?\"<>|]", "_");
+            Uri out = fileIn(tree, bin);
+            if (img != null && android.provider.DocumentsContract.getDocumentId(out)
+                    .equals(android.provider.DocumentsContract.getDocumentId(img))) {
+                throw new Exception("o arquivo novo teria o mesmo nome do jogo base; mude alguma opção ou use outra base");
+            }
+            String real = displayName(out);
+            Uri cue = fileIn(tree, real.replaceAll("\\.[^.]*$", "") + ".cue");
+            js("onPatchState", JSONObject.quote("Gravando em " + treeLabel(tree) + "…"));
+            runJob(img, ppf, out, cue);
+        } catch (Exception e) {
+            js("onPatchError", JSONObject.quote(String.valueOf(e.getMessage())));
+        }
     }
 
     private void onPatchResult(int request, int result, Intent data) {
@@ -283,15 +366,15 @@ public class MainActivity extends Activity {
             patchPpf = uri;
             String base = displayName(patchImage).replaceAll("\\.(bin|BIN|iso|img)$", "");
             String mod = displayName(uri).replaceAll("\\.(ppf|PPF)$", "");
-            js("onPatchState", JSONObject.quote("patch: " + displayName(uri) + ". Agora escolha onde salvar"));
-            Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-            i.addCategory(Intent.CATEGORY_OPENABLE);
-            i.setType("application/octet-stream");
-            i.putExtra(Intent.EXTRA_TITLE, (mod.equals(base) ? base + " (mod)" : base + " - " + mod) + ".bin");
-            startActivityForResult(i, PATCH_OUT);
+            startOutput(patchImage, patchPpf, (mod.equals(base) ? base + " (mod)" : base + " - " + mod) + ".bin");
+        } else if (request == TREE_OUT) {
+            getContentResolver().takePersistableUriPermission(uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            getSharedPreferences("fm", MODE_PRIVATE).edit().putString("outTree", uri.toString()).apply();
+            js("onOutputFolder", JSONObject.quote(treeLabel(uri)));
+            if (jobImage != null) startOutput(jobImage, jobPpf, jobName);
         } else {
-            if (request == BUILD_OUT) runJob(lastImage, buildPpf, uri);
-            else runJob(patchImage, patchPpf, uri);
+            runJob(request == BUILD_OUT ? lastImage : patchImage, request == BUILD_OUT ? buildPpf : patchPpf, uri, null);
         }
     }
 
