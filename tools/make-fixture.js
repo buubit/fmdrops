@@ -33,6 +33,7 @@ for (let d = 0; d < 39; d++) {
 { let fp = 2 + 722 * 2 + 2; const F = O.mrgFusions;
   for (let i = 1; i <= 40; i++) {
     const list = []; for (let k = 1; k <= (i % 4) + 1; k++) list.push([i + k, 100 + i + k]);
+    if (i <= 8) for (let k = 1; k <= 6; k++) list.push([i + 24 * k, 300]); // mesmo tipo -> mesma carta
     mrg.writeUInt16LE(fp, F + 2 + (i - 1) * 2); mrg[F + fp++] = list.length;
     for (let j = 0; j < list.length; j += 2) {
       const [a, ra] = list[j], [b, rb] = list[j + 1] || [0, 0];
@@ -41,6 +42,7 @@ for (let d = 0; d < 39; d++) {
     }
   }
 }
+[[700, 10, 11, 12, 650], [701, 20, 21, 22, 651]].forEach((r, i) => r.forEach((v, j) => mrg.writeUInt16LE(v, O.mrgRituals + i * 10 + j * 2)));
 const sec = lba => lba * 2352 + 24, files = [];
 const SLUS_LBA = 30, MRG_LBA = 1000, total = MRG_LBA + Math.ceil(mrg.length / 2048);
 const img = Buffer.alloc(total * 2352);

@@ -32,7 +32,9 @@
     mrgSaTec: 0x111C,
     mrgCosts: 0xFB9808,
     mrgFusions: 0xB87800,
-    mrgFusionsSize: 0x10000
+    mrgFusionsSize: 0x10000,
+    mrgRituals: 0xB97800,
+    mrgRitualsSize: 0x800
   };
 
   var TYPES = ['Dragão', 'Mago', 'Zumbi', 'Guerreiro', 'Besta-Guerreira', 'Besta',
@@ -263,6 +265,12 @@
         left--;
       }
     }
+    // Rituais: registros de 5 x u16 (carta de ritual, 3 sacrifícios, resultado), terminados por 0.
+    var rz = await src.mrg.read(OFF.mrgRituals, OFF.mrgRitualsSize), rituals = [];
+    for (var rp = 0; rp + 10 <= rz.length && u16(rz, rp); rp += 10) {
+      var rec = [u16(rz, rp), u16(rz, rp + 2), u16(rz, rp + 4), u16(rz, rp + 6), u16(rz, rp + 8)];
+      if (rec.every(function (v) { return v >= 1 && v <= CARDS; })) rituals.push(rec);
+    }
     progress(0.1);
 
     // Artes: 102x96 em 8 bits + paleta de 256 cores (BGR555), viram um atlas RGBA.
@@ -291,7 +299,7 @@
     }
 
     return {
-      game: { version: 2, source: src.slusName || '', cards: cards, duelists: duelists, fusions: fusions, atlas: atlas },
+      game: { version: 3, source: src.slusName || '', cards: cards, duelists: duelists, fusions: fusions, rituals: rituals, atlas: atlas },
       rgba: rgba
     };
   }

@@ -3,7 +3,7 @@
 
   var $ = function (id) { return document.getElementById(id); };
   var main = $('main'), sheet = $('sheet'), sheetContent = $('sheetContent');
-  var game = null, atlasUrl = '', view = 'cards', query = '';
+  var game = null, atlasUrl = '', view = 'cards', query = '', fusFilter = 'all';
   var dropsByCard = null, fusionsTo = null, fusionsWith = null;
   var RELEASE_API = 'https://api.github.com/repos/buubit/fmdrops/releases/tags/latest';
   var BUILD = window.APP_BUILD || 0;
@@ -87,19 +87,70 @@
     var c = game.cards[id - 1];
     return '<button data-card="' + id + '">' + art(id) + '<span class="t">' + esc(c.name) + '</span></button>';
   }
-  // kind: 'to' = pares que geram a carta; 'with' = o que a carta gera com outras
-  function fusionList(id, kind, all) {
-    var list = (kind === 'to' ? fusionsTo : fusionsWith)[id] || [];
+  function typeOf(id) { return game.cards[id - 1].typeName; }
+  function pairRow(a, b) { return '<div class="fuse">' + mini(a) + '<span class="op">+</span>' + mini(b) + '</div>'; }
+  function group(list, keyOf) {
+    var map = {}, order = [];
+    list.forEach(function (f) {
+      var k = keyOf(f);
+      if (!map[k]) { map[k] = []; order.push(k); }
+      map[k].push(f);
+    });
+    order.sort(function (x, y) { return map[y].length - map[x].length; });
+    return order.map(function (k) { return { key: k, items: map[k] }; });
+  }
+  var GROUP_MIN = 3; // a partir de quantos pares do mesmo tipo vira "Tipo + Tipo"
+
+  // Pares que geram a carta: combinações repetidas viram "Dragão + Trovão"; as específicas mostram as fotos.
+  function fusionsToHtml(id) {
+    var list = fusionsTo[id] || [];
     if (!list.length) return '';
-    var LIMIT = 30, shown = all ? list : list.slice(0, LIMIT);
-    return '<h3>' + (kind === 'to' ? 'Fusões que geram esta carta' : 'Fusões usando esta carta') + ' (' + list.length + ')</h3>' +
-      shown.map(function (f) {
-        if (kind === 'to') return '<div class="fuse">' + mini(f[0]) + '<span class="op">+</span>' + mini(f[1]) + '</div>';
-        var other = f[0] === id ? f[1] : f[0];
-        return '<div class="fuse"><span class="op">+</span>' + mini(other) + '<span class="op">=</span>' + mini(f[2]) + '</div>';
-      }).join('') +
-      (list.length > shown.length ? '<button class="secondary more" data-card="' + id + '" data-all="' + kind +
-        '">Mostrar todas (' + list.length + ')</button>' : '');
+    var generic = '', specific = '';
+    group(list, function (f) {
+      var a = typeOf(f[0]), b = typeOf(f[1]);
+      return a < b ? a + '|' + b : b + '|' + a;
+    }).forEach(function (g) {
+      if (g.items.length < GROUP_MIN) { specific += g.items.map(function (f) { return pairRow(f[0], f[1]); }).join(''); return; }
+      var t = g.key.split('|');
+      generic += '<details class="grp"><summary><span class="types"><b>' + esc(t[0]) + '</b><span class="op">+</span><b>' +
+        esc(t[1]) + '</b></span><span class="badge">' + g.items.length + ' pares</span></summary>' +
+        g.items.map(function (f) { return pairRow(f[0], f[1]); }).join('') + '</details>';
+    });
+    return '<h3>Fusões que geram esta carta (' + list.length + ')</h3>' +
+      (generic ? '<p class="legend">Toque num tipo para ver os pares exatos (nem toda carta do tipo serve).</p>' : '') +
+      generic + specific;
+  }
+
+  // O que a carta gera: "+ Trovão = resultado" quando vários do mesmo tipo dão o mesmo resultado.
+  function fusionsWithHtml(id) {
+    var list = fusionsWith[id] || [];
+    if (!list.length) return '';
+    var other = function (f) { return f[0] === id ? f[1] : f[0]; };
+    var generic = '', specific = '';
+    group(list, function (f) { return typeOf(other(f)) + '|' + f[2]; }).forEach(function (g) {
+      var res = +g.key.split('|')[1], rc = game.cards[res - 1];
+      if (g.items.length < GROUP_MIN) {
+        specific += g.items.map(function (f) {
+          return '<div class="fuse"><span class="op">+</span>' + mini(other(f)) + '<span class="op">=</span>' + mini(res) + '</div>';
+        }).join('');
+        return;
+      }
+      generic += '<details class="grp"><summary><span class="types"><span class="op">+</span><b>' + esc(g.key.split('|')[0]) +
+        '</b><span class="op">=</span>' + art(res) + '<span class="t">' + esc(rc.name) + '</span></span><span class="badge">' +
+        g.items.length + '</span></summary><div class="fuse"><span class="op">=</span>' + mini(res) + '</div>' +
+        g.items.map(function (f) { return '<div class="fuse"><span class="op">+</span>' + mini(other(f)) + '</div>'; }).join('') +
+        '</details>';
+    });
+    return '<h3>Fusões usando esta carta (' + list.length + ')</h3>' + generic + specific;
+  }
+
+  function ritualsHtml(id) {
+    return (game.rituals || []).filter(function (r) { return r.indexOf(id) >= 0; }).map(function (r) {
+      return '<h3>Ritual</h3><div class="ritual"><p class="legend">Carta de ritual</p><div class="fuse">' + mini(r[0]) +
+        '</div><p class="legend">Sacrifícios no campo</p>' +
+        [r[1], r[2], r[3]].map(function (t) { return '<div class="fuse">' + mini(t) + '</div>'; }).join('') +
+        '<p class="legend">Invoca</p><div class="fuse">' + mini(r[4]) + '</div></div>';
+    }).join('');
   }
 
   /* ---------- telas ---------- */
@@ -107,19 +158,38 @@
   function render() {
     $('tools').hidden = !game;
     if (!game) return renderEmpty();
-    $('tabCards').setAttribute('aria-selected', view === 'cards');
-    $('tabDuelists').setAttribute('aria-selected', view === 'duelists');
-    $('search').placeholder = view === 'cards' ? 'Buscar carta ou número' : 'Buscar duelista';
+    ['cards', 'fusions', 'duelists'].forEach(function (v) {
+      $('tab' + v[0].toUpperCase() + v.slice(1)).setAttribute('aria-selected', view === v);
+    });
+    $('search').placeholder = view === 'duelists' ? 'Buscar duelista' : 'Buscar carta ou número';
     var q = query.trim().toLowerCase();
+    var match = function (c) {
+      return !q || c.name.toLowerCase().indexOf(q) >= 0 || String(c.id) === q.replace(/^#?0*/, '');
+    };
+    var tile = function (c, dim) {
+      return '<button class="card' + (dim ? ' nodrop' : '') + '" data-card="' + c.id +
+        '" aria-label="' + esc(c.name) + '">' + art(c.id) + '<span class="num">' + c.id + '</span></button>';
+    };
     if (view === 'cards') {
-      var list = game.cards.filter(function (c) {
-        return !q || c.name.toLowerCase().indexOf(q) >= 0 || String(c.id) === q.replace(/^#?0*/, '');
-      });
+      var list = game.cards.filter(match);
       main.innerHTML = '<p class="count">' + list.length + ' cartas</p><div class="grid">' +
-        list.map(function (c) {
-          return '<button class="card' + (dropsByCard[c.id] ? '' : ' nodrop') + '" data-card="' + c.id +
-            '" aria-label="' + esc(c.name) + '">' + art(c.id) + '<span class="num">' + c.id + '</span></button>';
-        }).join('') + '</div>';
+        list.map(function (c) { return tile(c, !dropsByCard[c.id]); }).join('') + '</div>';
+    } else if (view === 'fusions') {
+      if (!game.fusions || !game.rituals) {
+        main.innerHTML = '<p class="note">Para ver esta área, importe o jogo de novo em ⚙ (os dados salvos são de uma versão antiga do app).</p>';
+        return;
+      }
+      var ritualSet = {};
+      game.rituals.forEach(function (r) { ritualSet[r[4]] = 1; });
+      var chips = [['all', 'Todas'], ['fusion', 'Fusão'], ['ritual', 'Ritual']];
+      var fl = game.cards.filter(function (c) {
+        var f = !!fusionsTo[c.id], r = !!ritualSet[c.id];
+        return match(c) && (fusFilter === 'fusion' ? f : fusFilter === 'ritual' ? r : f || r);
+      });
+      main.innerHTML = '<div class="chips">' + chips.map(function (k) {
+        return '<button data-fus="' + k[0] + '" aria-pressed="' + (fusFilter === k[0]) + '">' + k[1] + '</button>';
+      }).join('') + '</div><p class="count">' + fl.length + ' cartas que podem ser feitas por fusão ou ritual</p>' +
+        '<div class="grid">' + fl.map(function (c) { return tile(c); }).join('') + '</div>';
     } else {
       main.innerHTML = '<div class="list">' + game.duelists.filter(function (d) {
         return !q || d.name.toLowerCase().indexOf(q) >= 0;
@@ -168,8 +238,8 @@
           }).join('') + '</span></div>';
       }).join('') : '<p class="meta">Nenhum duelista dropa esta carta.</p>') +
       (game.fusions
-        ? (fusionList(id, 'to', all === 'to') + fusionList(id, 'with', all === 'with')) ||
-          '<h3>Fusões</h3><p class="meta">Esta carta não participa de nenhuma fusão.</p>'
+        ? (ritualsHtml(id) + fusionsToHtml(id) + fusionsWithHtml(id)) ||
+          '<h3>Fusões</h3><p class="meta">Esta carta não participa de nenhuma fusão ou ritual.</p>'
         : '<h3>Fusões</h3><p class="note">Para ver as fusões, importe o jogo de novo em ⚙ (os dados salvos são de uma versão antiga do app).</p>'));
   }
 
@@ -280,7 +350,8 @@
     if (t.id === 'btnImport') { $('file').value = ''; $('file').click(); }
     else if (t.id === 'btnSettings') showSettings();
     else if (t.id === 'sheetClose') closeSheet();
-    else if (t.id === 'tabCards' || t.id === 'tabDuelists') { view = t.id === 'tabCards' ? 'cards' : 'duelists'; render(); }
+    else if (/^tab(Cards|Fusions|Duelists)$/.test(t.id)) { view = t.id.slice(3).toLowerCase(); window.scrollTo(0, 0); render(); }
+    else if (t.dataset.fus) { fusFilter = t.dataset.fus; render(); }
     else if (t.id === 'btnClear') {
       if (confirm('Apagar as cartas e drops importados?')) clearAll().then(function () { game = null; closeSheet(); render(); });
     }
