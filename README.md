@@ -6,6 +6,8 @@ App Android simples e 100% local para consultar **onde cada carta dropa** no
 - Grade com a foto de todas as 722 cartas; toque em uma para ver quais duelistas
   dropam, em qual rank (S/A POW, B/C/D, S/A TEC) e a chance.
 - Lista de duelistas com tudo que cada um dropa.
+- Fusões: quais pares geram a carta e o que ela gera com outras.
+- ⚙ → **Procurar atualização** baixa o APK mais novo da release.
 - Sem servidor, sem banco, sem internet.
 
 ## Como os dados entram
@@ -57,6 +59,7 @@ Offsets da versão USA, conforme o projeto aberto
 | Artes (102×96, 8 bits + paleta) | `WA_MRG.MRG` | `0x169000` + `0x3800` por carta |
 | Deck e drops de cada duelista | `WA_MRG.MRG` | `0xE9B000` + `0x1800` por duelista (`+0x5B4` POW, `+0xB68` BCD, `+0x111C` TEC) |
 | Custo em estrelas / senha | `WA_MRG.MRG` | `0xFB9808` |
+| Fusões | `WA_MRG.MRG` | `0xB87800` (`0x10000` bytes) |
 
 As chances são em 2048 avos por tabela.
 

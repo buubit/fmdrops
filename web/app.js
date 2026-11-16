@@ -4,7 +4,9 @@
   var $ = function (id) { return document.getElementById(id); };
   var main = $('main'), sheet = $('sheet'), sheetContent = $('sheetContent');
   var game = null, atlasUrl = '', view = 'cards', query = '';
-  var dropsByCard = null;
+  var dropsByCard = null, fusionsTo = null, fusionsWith = null;
+  var RELEASE_API = 'https://api.github.com/repos/buubit/fmdrops/releases/tags/latest';
+  var BUILD = window.APP_BUILD || 0;
   var RANKS = [['pow', 'S/A POW'], ['bcd', 'B/C/D'], ['tec', 'S/A TEC']];
 
   /* ---------- armazenamento local (IndexedDB) ---------- */
@@ -73,6 +75,31 @@
         });
       });
     });
+    fusionsTo = {}; fusionsWith = {};
+    (game.fusions || []).forEach(function (f) {
+      (fusionsTo[f[2]] || (fusionsTo[f[2]] = [])).push(f);
+      (fusionsWith[f[0]] || (fusionsWith[f[0]] = [])).push(f);
+      if (f[1] !== f[0]) (fusionsWith[f[1]] || (fusionsWith[f[1]] = [])).push(f);
+    });
+  }
+
+  function mini(id) {
+    var c = game.cards[id - 1];
+    return '<button data-card="' + id + '">' + art(id) + '<span class="t">' + esc(c.name) + '</span></button>';
+  }
+  // kind: 'to' = pares que geram a carta; 'with' = o que a carta gera com outras
+  function fusionList(id, kind, all) {
+    var list = (kind === 'to' ? fusionsTo : fusionsWith)[id] || [];
+    if (!list.length) return '';
+    var LIMIT = 30, shown = all ? list : list.slice(0, LIMIT);
+    return '<h3>' + (kind === 'to' ? 'Fusões que geram esta carta' : 'Fusões usando esta carta') + ' (' + list.length + ')</h3>' +
+      shown.map(function (f) {
+        if (kind === 'to') return '<div class="fuse">' + mini(f[0]) + '<span class="op">+</span>' + mini(f[1]) + '</div>';
+        var other = f[0] === id ? f[1] : f[0];
+        return '<div class="fuse"><span class="op">+</span>' + mini(other) + '<span class="op">=</span>' + mini(f[2]) + '</div>';
+      }).join('') +
+      (list.length > shown.length ? '<button class="secondary more" data-card="' + id + '" data-all="' + kind +
+        '">Mostrar todas (' + list.length + ')</button>' : '');
   }
 
   /* ---------- telas ---------- */
@@ -120,7 +147,7 @@
   function closeSheet() { if (!sheet.hidden) history.back(); }
   window.addEventListener('popstate', function () { sheet.hidden = true; });
 
-  function showCard(id) {
+  function showCard(id, all) {
     var c = game.cards[id - 1], drops = dropsByCard[id] || {};
     var rows = Object.keys(drops).map(function (did) {
       var r = drops[did];
@@ -139,7 +166,11 @@
           '</button><span class="pills">' + RANKS.map(function (k) {
             return x.r[k[0]] ? '<span class="pill ' + k[0] + '">' + k[1] + ' ' + pct(x.r[k[0]]) + '</span>' : '';
           }).join('') + '</span></div>';
-      }).join('') : '<p class="meta">Nenhum duelista dropa esta carta.</p>'));
+      }).join('') : '<p class="meta">Nenhum duelista dropa esta carta.</p>') +
+      (game.fusions
+        ? (fusionList(id, 'to', all === 'to') + fusionList(id, 'with', all === 'with')) ||
+          '<h3>Fusões</h3><p class="meta">Esta carta não participa de nenhuma fusão.</p>'
+        : '<h3>Fusões</h3><p class="note">Para ver as fusões, importe o jogo de novo em ⚙ (os dados salvos são de uma versão antiga do app).</p>'));
   }
 
   function showDuelist(id, rank) {
@@ -165,7 +196,30 @@
       '<p class="meta">' + (game ? 'Jogo carregado: ' + esc(game.source || 'arquivos soltos') + ' · ' +
         game.cards.length + ' cartas, ' + game.duelists.length + ' duelistas.' : 'Nenhum jogo importado.') + '</p>' +
       '<div class="stack"><button id="btnImport">Importar outra imagem / mod</button>' +
-      (game ? '<button id="btnClear" class="secondary">Apagar dados do app</button>' : '') + '</div>');
+      (game ? '<button id="btnClear" class="secondary">Apagar dados do app</button>' : '') + '</div>' +
+      '<h3>Atualização do app</h3><p class="meta">Versão instalada: build ' + BUILD + '</p>' +
+      '<div id="update" class="stack"><button id="btnUpdate" class="secondary">Procurar atualização</button></div>');
+  }
+
+  function checkUpdate() {
+    var box = $('update');
+    box.innerHTML = '<p class="meta">Procurando…</p>';
+    fetch(RELEASE_API, { cache: 'no-store' }).then(function (r) {
+      if (!r.ok) throw new Error('GitHub respondeu ' + r.status);
+      return r.json();
+    }).then(function (rel) {
+      if (!$('update')) return;
+      var m = /build\s+(\d+)/i.exec(rel.body || ''), latest = m ? +m[1] : 0;
+      var apk = (rel.assets || []).filter(function (a) { return /\.apk$/.test(a.name); })[0];
+      if (!apk || !latest) throw new Error('não encontrei o APK na release');
+      $('update').innerHTML = latest > BUILD
+        ? '<p class="note"><b>Build ' + latest + ' disponível.</b> Baixe e abra o arquivo para instalar por cima; os dados importados continuam.</p>' +
+          '<a class="btn" href="' + esc(apk.browser_download_url) + '">Baixar build ' + latest + '</a>'
+        : '<p class="note">Você já está na versão mais recente (build ' + latest + ').</p>';
+    }).catch(function (e) {
+      if ($('update')) $('update').innerHTML = '<p class="error">Não deu para verificar (' + esc(e.message || e) +
+        '). Confira a internet.</p><button id="btnUpdate" class="secondary">Tentar de novo</button>';
+    });
   }
 
   /* ---------- importação ---------- */
@@ -230,8 +284,9 @@
     else if (t.id === 'btnClear') {
       if (confirm('Apagar as cartas e drops importados?')) clearAll().then(function () { game = null; closeSheet(); render(); });
     }
+    else if (t.id === 'btnUpdate') checkUpdate();
     else if (t.dataset.duelist) showDuelist(+t.dataset.duelist, t.dataset.rank);
-    else if (t.dataset.card) showCard(+t.dataset.card);
+    else if (t.dataset.card) showCard(+t.dataset.card, t.dataset.all);
   });
   $('file').addEventListener('change', function () { if (this.files.length) importFiles(this.files); });
   $('search').addEventListener('input', function () { query = this.value; render(); });

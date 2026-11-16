@@ -24,6 +24,8 @@ jobs:
         run: |
           node tools/make-fixture.js /tmp/fixture.bin
           node tools/extract.js /tmp/fixture.bin /tmp/out.json
+      - name: Gravar número do build
+        run: echo "window.APP_BUILD = ${{ github.run_number }};" > web/version.js
       - name: Compilar
         working-directory: android
         run: gradle --no-daemon assembleDebug
@@ -38,5 +40,6 @@ jobs:
           tag_name: latest
           name: FM Drops (último build)
           prerelease: true
+          body: "build ${{ github.run_number }}"
           files: fmdrops.apk
           target_commitish: ${{ github.sha }}

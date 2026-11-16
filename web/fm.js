@@ -30,7 +30,9 @@
     mrgSaPow: 0x5B4,
     mrgBcd: 0xB68,
     mrgSaTec: 0x111C,
-    mrgCosts: 0xFB9808
+    mrgCosts: 0xFB9808,
+    mrgFusions: 0xB87800,
+    mrgFusionsSize: 0x10000
   };
 
   var TYPES = ['Dragão', 'Mago', 'Zumbi', 'Guerreiro', 'Besta-Guerreira', 'Besta',
@@ -243,6 +245,24 @@
         tec: table(base + OFF.mrgSaTec)
       });
     }
+    // Fusões: tabela indexada pela carta de menor número; cada bloco de 5 bytes guarda 2 fusões.
+    var fz = await src.mrg.read(OFF.mrgFusions, OFF.mrgFusionsSize), fusions = [];
+    for (i = 0; i < CARDS; i++) {
+      var fp = u16(fz, 2 + i * 2);
+      if (!fp) continue;
+      var left = fz[fp++];
+      if (left === 0) left = 511 - fz[fp++];
+      while (left > 0 && fp + 5 <= fz.length) {
+        var ctl = fz[fp], b1 = fz[fp + 1], r1 = fz[fp + 2], b2 = fz[fp + 3], r2 = fz[fp + 4];
+        fp += 5;
+        var m1 = (ctl & 3) << 8 | b1, o1 = (ctl >> 2 & 3) << 8 | r1;
+        if (m1 >= 1 && m1 <= CARDS && o1 >= 1 && o1 <= CARDS) fusions.push([i + 1, m1, o1]);
+        if (--left <= 0) break;
+        var m2 = (ctl >> 4 & 3) << 8 | b2, o2 = (ctl >> 6 & 3) << 8 | r2;
+        if (m2 >= 1 && m2 <= CARDS && o2 >= 1 && o2 <= CARDS) fusions.push([i + 1, m2, o2]);
+        left--;
+      }
+    }
     progress(0.1);
 
     // Artes: 102x96 em 8 bits + paleta de 256 cores (BGR555), viram um atlas RGBA.
@@ -271,7 +291,7 @@
     }
 
     return {
-      game: { version: 1, source: src.slusName || '', cards: cards, duelists: duelists, atlas: atlas },
+      game: { version: 2, source: src.slusName || '', cards: cards, duelists: duelists, fusions: fusions, atlas: atlas },
       rgba: rgba
     };
   }

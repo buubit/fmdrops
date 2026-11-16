@@ -29,6 +29,18 @@ for (let d = 0; d < 39; d++) {
   });
 }
 
+// fusões falsas: carta i (1..40) + carta i+k -> carta 100+i+k
+{ let fp = 2 + 722 * 2 + 2; const F = O.mrgFusions;
+  for (let i = 1; i <= 40; i++) {
+    const list = []; for (let k = 1; k <= (i % 4) + 1; k++) list.push([i + k, 100 + i + k]);
+    mrg.writeUInt16LE(fp, F + 2 + (i - 1) * 2); mrg[F + fp++] = list.length;
+    for (let j = 0; j < list.length; j += 2) {
+      const [a, ra] = list[j], [b, rb] = list[j + 1] || [0, 0];
+      mrg[F + fp++] = (a >> 8) | (ra >> 8) << 2 | (b >> 8) << 4 | (rb >> 8) << 6;
+      mrg[F + fp++] = a & 255; mrg[F + fp++] = ra & 255; mrg[F + fp++] = b & 255; mrg[F + fp++] = rb & 255;
+    }
+  }
+}
 const sec = lba => lba * 2352 + 24, files = [];
 const SLUS_LBA = 30, MRG_LBA = 1000, total = MRG_LBA + Math.ceil(mrg.length / 2048);
 const img = Buffer.alloc(total * 2352);

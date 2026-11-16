@@ -13,5 +13,5 @@ const blob = p => {
 FM.open(args.map(blob)).then(src => FM.parse(src)).then(({ game }) => {
   fs.writeFileSync(out, JSON.stringify(game));
   const n = game.duelists.reduce((s, d) => s + d.pow.length + d.bcd.length + d.tec.length, 0);
-  console.log(`${game.cards.length} cartas, ${game.duelists.length} duelistas, ${n} entradas de drop -> ${out}`);
+  console.log(`${game.cards.length} cartas, ${game.duelists.length} duelistas, ${n} entradas de drop, ${game.fusions.length} fusões -> ${out}`);
 }).catch(e => { console.error(e.message); process.exit(1); });
