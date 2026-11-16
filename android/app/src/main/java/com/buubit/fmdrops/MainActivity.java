@@ -3,37 +3,75 @@ package com.buubit.fmdrops;
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-/** Casca mínima: uma WebView que abre o app local em assets (pasta /web do repositório). */
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Iterator;
+
+/**
+ * Casca mínima: uma WebView que serve o app (pasta /web do repositório) em https://app.fmdrops/.
+ * Os arquivos vêm do APK (assets) ou, se existir, do pacote mais novo baixado pela atualização
+ * interna (filesDir/web), o que permite atualizar o app sem reinstalar o APK.
+ */
 public class MainActivity extends Activity {
     private static final int PICK_FILE = 1;
+    private static final String HOST = "app.fmdrops";
+    private static final String HOME = "https://" + HOST + "/index.html";
+    private static final String UPDATE_PREFIX = "https://github.com/buubit/fmdrops/releases/download/";
+
+    private final Handler ui = new Handler(Looper.getMainLooper());
     private WebView web;
     private ValueCallback<Uri[]> pending;
+    private File bundle;
 
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
+        bundle = new File(getFilesDir(), "web");
+        // Um pacote baixado mais antigo que o próprio APK não serve mais.
+        if (bundleBuild() <= shellBuild()) delete(bundle);
+
         web = new WebView(this);
         web.setBackgroundColor(Color.parseColor("#08141a"));
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
-        s.setAllowFileAccess(true);
+        web.addJavascriptInterface(new Bridge(), "Android");
         web.setWebViewClient(new WebViewClient() {
+            @Override
+            public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                Uri url = request.getUrl();
+                if (!HOST.equals(url.getHost())) return null;
+                return serve(url.getLastPathSegment());
+            }
+
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri url = request.getUrl();
-                if ("file".equals(url.getScheme())) return false;
-                // Links externos (download da atualização) abrem no navegador do aparelho.
+                if (HOST.equals(url.getHost())) return false;
+                // Links externos abrem no navegador do aparelho.
                 try { startActivity(new Intent(Intent.ACTION_VIEW, url)); } catch (Exception ignored) { }
                 return true;
             }
@@ -57,14 +95,113 @@ public class MainActivity extends Activity {
             }
         });
         setContentView(web);
-        if (state == null) web.loadUrl("file:///android_asset/index.html");
-        else web.restoreState(state);
+        load();
     }
 
-    @Override
-    protected void onSaveInstanceState(Bundle out) {
-        super.onSaveInstanceState(out);
-        web.saveState(out);
+    private void load() {
+        web.loadUrl(HOME);
+        if (!bundle.exists()) return;
+        // Rede de segurança: se o pacote baixado não iniciar, volta para a versão do APK.
+        ui.postDelayed(() -> web.evaluateJavascript("window.__fmBooted === true", ok -> {
+            if (!"true".equals(ok) && bundle.exists()) {
+                delete(bundle);
+                web.loadUrl(HOME);
+            }
+        }), 8000);
+    }
+
+    private WebResourceResponse serve(String name) {
+        if (name == null || name.isEmpty()) name = "index.html";
+        String mime = name.endsWith(".html") ? "text/html" : name.endsWith(".js") ? "text/javascript"
+                : name.endsWith(".css") ? "text/css" : "application/octet-stream";
+        try {
+            File f = new File(bundle, name);
+            InputStream in = f.isFile() ? new FileInputStream(f) : getAssets().open(name);
+            return new WebResourceResponse(mime, "utf-8", in);
+        } catch (Exception e) {
+            return new WebResourceResponse("text/plain", "utf-8", 404, "Not Found",
+                    new java.util.HashMap<String, String>(), new java.io.ByteArrayInputStream(new byte[0]));
+        }
+    }
+
+    private int shellBuild() {
+        try {
+            return getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
+        } catch (PackageManager.NameNotFoundException e) {
+            return 0;
+        }
+    }
+
+    private int bundleBuild() {
+        try {
+            return Integer.parseInt(new String(readAll(new FileInputStream(new File(bundle, "build"))), StandardCharsets.UTF_8).trim());
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private static byte[] readAll(InputStream in) throws Exception {
+        try (InputStream src = in) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buf = new byte[16384];
+            for (int n; (n = src.read(buf)) > 0; ) out.write(buf, 0, n);
+            return out.toByteArray();
+        }
+    }
+
+    private static void delete(File f) {
+        File[] kids = f.listFiles();
+        if (kids != null) for (File k : kids) delete(k);
+        f.delete();
+    }
+
+    /** Baixa web.json ({build, files:{nome: conteúdo}}) e troca o pacote local. */
+    private void installBundle(String address) throws Exception {
+        if (!address.startsWith(UPDATE_PREFIX)) throw new Exception("endereço de atualização inválido");
+        HttpURLConnection c = (HttpURLConnection) new URL(address).openConnection();
+        c.setConnectTimeout(15000);
+        c.setReadTimeout(30000);
+        if (c.getResponseCode() != 200) throw new Exception("download respondeu " + c.getResponseCode());
+        JSONObject json = new JSONObject(new String(readAll(c.getInputStream()), StandardCharsets.UTF_8));
+        JSONObject files = json.getJSONObject("files");
+        if (!files.has("index.html") || !files.has("app.js")) throw new Exception("pacote incompleto");
+
+        File tmp = new File(getFilesDir(), "web.new");
+        delete(tmp);
+        if (!tmp.mkdirs()) throw new Exception("sem espaço para gravar");
+        for (Iterator<String> it = files.keys(); it.hasNext(); ) {
+            String name = it.next();
+            if (!name.matches("[A-Za-z0-9_.-]+")) continue;
+            try (FileOutputStream out = new FileOutputStream(new File(tmp, name))) {
+                out.write(files.getString(name).getBytes(StandardCharsets.UTF_8));
+            }
+        }
+        try (FileOutputStream out = new FileOutputStream(new File(tmp, "build"))) {
+            out.write(String.valueOf(json.getInt("build")).getBytes(StandardCharsets.UTF_8));
+        }
+        delete(bundle);
+        if (!tmp.renameTo(bundle)) throw new Exception("não consegui gravar a atualização");
+    }
+
+    private class Bridge {
+        /** Versão da casca Android; só muda quando o APK precisa ser reinstalado. */
+        @JavascriptInterface
+        public int shellVersion() {
+            return BuildConfig.SHELL;
+        }
+
+        @JavascriptInterface
+        public void applyUpdate(final String address) {
+            new Thread(() -> {
+                try {
+                    installBundle(address);
+                    ui.post(MainActivity.this::load);
+                } catch (Exception e) {
+                    final String msg = JSONObject.quote(String.valueOf(e.getMessage()));
+                    ui.post(() -> web.evaluateJavascript("window.onUpdateError && window.onUpdateError(" + msg + ")", null));
+                }
+            }).start();
+        }
     }
 
     @Override

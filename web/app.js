@@ -271,26 +271,47 @@
       '<div id="update" class="stack"><button id="btnUpdate" class="secondary">Procurar atualização</button></div>');
   }
 
-  function checkUpdate() {
-    var box = $('update');
-    box.innerHTML = '<p class="meta">Procurando…</p>';
-    fetch(RELEASE_API, { cache: 'no-store' }).then(function (r) {
+  var native = window.Android && window.Android.applyUpdate ? window.Android : null;
+
+  function findUpdate() {
+    return fetch(RELEASE_API, { cache: 'no-store' }).then(function (r) {
       if (!r.ok) throw new Error('GitHub respondeu ' + r.status);
       return r.json();
     }).then(function (rel) {
-      if (!$('update')) return;
-      var m = /build\s+(\d+)/i.exec(rel.body || ''), latest = m ? +m[1] : 0;
-      var apk = (rel.assets || []).filter(function (a) { return /\.apk$/.test(a.name); })[0];
-      if (!apk || !latest) throw new Error('não encontrei o APK na release');
-      $('update').innerHTML = latest > BUILD
-        ? '<p class="note"><b>Build ' + latest + ' disponível.</b> Baixe e abra o arquivo para instalar por cima; os dados importados continuam.</p>' +
-          '<a class="btn" href="' + esc(apk.browser_download_url) + '">Baixar build ' + latest + '</a>'
-        : '<p class="note">Você já está na versão mais recente (build ' + latest + ').</p>';
-    }).catch(function (e) {
-      if ($('update')) $('update').innerHTML = '<p class="error">Não deu para verificar (' + esc(e.message || e) +
-        '). Confira a internet.</p><button id="btnUpdate" class="secondary">Tentar de novo</button>';
+      var m = /build\s+(\d+)/i.exec(rel.body || ''), sh = /shell\s+(\d+)/i.exec(rel.body || '');
+      var asset = function (re) {
+        var a = (rel.assets || []).filter(function (x) { return re.test(x.name); })[0];
+        return a ? a.browser_download_url : '';
+      };
+      var info = { latest: m ? +m[1] : 0, apk: asset(/\.apk$/), web: asset(/^web\.json$/) };
+      if (!info.latest || !info.apk) throw new Error('não encontrei a versão na release');
+      info.newer = info.latest > BUILD;
+      // Dá para atualizar por dentro quando a casca Android instalada ainda serve.
+      info.inApp = !!(native && info.web && sh && +sh[1] <= native.shellVersion());
+      return info;
     });
   }
+
+  function checkUpdate() {
+    var box = $('update');
+    box.innerHTML = '<p class="meta">Procurando…</p>';
+    findUpdate().then(function (u) {
+      if (!$('update')) return;
+      if (!u.newer) $('update').innerHTML = '<p class="note">Você já está na versão mais recente (build ' + u.latest + ').</p>';
+      else if (u.inApp) $('update').innerHTML = '<p class="note"><b>Build ' + u.latest + ' disponível.</b> Atualiza aqui mesmo, sem baixar APK; os dados importados continuam.</p>' +
+        '<button id="btnApply" data-url="' + esc(u.web) + '">Atualizar agora</button>';
+      else $('update').innerHTML = '<p class="note"><b>Build ' + u.latest + ' disponível.</b> Esta precisa do APK novo: baixe e abra o arquivo para instalar por cima.</p>' +
+        '<a class="btn" href="' + esc(u.apk) + '">Baixar build ' + u.latest + '</a>';
+    }).catch(function (e) {
+      if ($('update')) $('update').innerHTML = '<p class="error">Não deu para verificar (' + esc(e.message || e) +
+        ').</p><button id="btnUpdate" class="secondary">Tentar de novo</button>';
+    });
+  }
+
+  window.onUpdateError = function (msg) {
+    if ($('update')) $('update').innerHTML = '<p class="error">A atualização falhou (' + esc(msg) +
+      ').</p><button id="btnUpdate" class="secondary">Tentar de novo</button>';
+  };
 
   /* ---------- importação ---------- */
 
@@ -356,6 +377,8 @@
       if (confirm('Apagar as cartas e drops importados?')) clearAll().then(function () { game = null; closeSheet(); render(); });
     }
     else if (t.id === 'btnUpdate') checkUpdate();
+    else if (t.id === 'btnApply') { t.disabled = true; t.textContent = 'Atualizando…'; native.applyUpdate(t.dataset.url); }
+    else if (t.id === 'updBadge') { showSettings(); checkUpdate(); }
     else if (t.dataset.duelist) showDuelist(+t.dataset.duelist, t.dataset.rank);
     else if (t.dataset.card) showCard(+t.dataset.card, t.dataset.all);
   });
@@ -367,4 +390,7 @@
   });
 
   boot();
+  window.__fmBooted = true;
+  // Aviso discreto no topo quando existe versão nova.
+  findUpdate().then(function (u) { if (u.newer) $('updBadge').hidden = false; }).catch(function () {});
 })();

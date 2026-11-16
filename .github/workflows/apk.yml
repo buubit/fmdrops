@@ -26,6 +26,15 @@ jobs:
           node tools/extract.js /tmp/fixture.bin /tmp/out.json
       - name: Gravar número do build
         run: echo "window.APP_BUILD = ${{ github.run_number }};" > web/version.js
+      - name: Empacotar o app para a atualização interna
+        run: |
+          node -e "
+          const fs = require('fs');
+          const files = {};
+          for (const f of fs.readdirSync('web')) files[f] = fs.readFileSync('web/' + f, 'utf8');
+          fs.writeFileSync('web.json', JSON.stringify({ build: ${{ github.run_number }}, files }));
+          "
+          echo "SHELL=$(cat android/shell-version.txt)" >> "$GITHUB_ENV"
       - name: Compilar
         working-directory: android
         run: gradle --no-daemon assembleDebug
@@ -40,6 +49,8 @@ jobs:
           tag_name: latest
           name: FM Drops (último build)
           prerelease: true
-          body: "build ${{ github.run_number }}"
-          files: fmdrops.apk
+          body: "build ${{ github.run_number }} shell ${{ env.SHELL }}"
+          files: |
+            fmdrops.apk
+            web.json
           target_commitish: ${{ github.sha }}

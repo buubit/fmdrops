@@ -7,7 +7,7 @@ App Android simples e 100% local para consultar **onde cada carta dropa** no
   dropam, em qual rank (S/A POW, B/C/D, S/A TEC) e a chance.
 - Lista de duelistas com tudo que cada um dropa.
 - Aba Fusões só com cartas feitas por fusão ou ritual; combinações repetidas aparecem agrupadas por tipo (ex.: Dragão + Trovão).
-- ⚙ → **Procurar atualização** baixa o APK mais novo da release.
+- Atualização por dentro do app (⚙ → **Procurar atualização** → **Atualizar agora**), sem reinstalar o APK. O APK só precisa ser baixado de novo quando a casca Android muda (`android/shell-version.txt`).
 - Sem servidor, sem banco, sem internet.
 
 ## Como os dados entram
