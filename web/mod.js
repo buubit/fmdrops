@@ -177,7 +177,7 @@
       var r = exeBytes(ed, ROUTINE + POOL_SITE, 8);
       pool = hex(r) === '4020020001000424' ? 'rank' : (r[2] === 4 && r[3] === 0x24 && r[6] === 4 && r[7] === 0x24) ? ['pow', 'bcd', 'tec'][r[0]] || 'rank' : null;
     }
-    return { drops: drops, starchips: starchips, lp: life, freeDuel: freeDuel, deckLimit: deckLimit, terrain: terrain,
+    return { drops: drops, starchips: starchips, lp: life, freeDuel: freeDuel, deckLimit: deckLimit, terrain: terrain, lang: descRegion(ed) ? 'en' : null,
       dropPool: drops != null ? (pool || 'rank') : null, exe: ed.src.slusName };
   }
 
@@ -288,6 +288,42 @@
     return new Uint8Array(Buffer.from(str, 'base64'));
   }
 
+  function wrapText(t, w) {
+    var lines = [], cur = '';
+    plain(t).split(/\s+/).filter(Boolean).forEach(function (word) {
+      if (!cur) cur = word;
+      else if (cur.length + 1 + word.length <= w) cur += ' ' + word;
+      else { lines.push(cur); cur = word; }
+    });
+    if (cur) lines.push(cur);
+    return lines.slice(0, 8).join('\n');
+  }
+
+  // Região das descrições: só reorganiza se for um bloco contínuo com as 722 em ordem.
+  function descRegion(ed) {
+    var starts = [], ends = [];
+    for (var i = 0; i < CARDS; i++) { var p = DESC_BASE + u16(ed.slus, DESC_PTR + i * 2); starts.push(p); ends.push(p + strLen(ed.slus, p)); }
+    for (i = 1; i < CARDS; i++) if (starts[i] !== ends[i - 1] + 1) return null;
+    return { start: starts[0], end: ends[CARDS - 1] + 1 }; // [start, end)
+  }
+
+  // Reescreve todas as descrições (tradução + descrições das cartas próprias) no mesmo bloco.
+  function repackDescriptions(ed, texts) {
+    var reg = descRegion(ed);
+    if (!reg) throw new Error('não deu para trocar o idioma nesta versão do jogo (o texto das cartas foi modificado)');
+    var size = reg.end - reg.start, buf = new Uint8Array(size).fill(0xFF), pos = 0, ptrs = new Uint8Array(CARDS * 2);
+    for (var i = 0; i < CARDS; i++) {
+      var enc = encodeText(texts[i]);
+      if (pos + enc.length + 1 > size) throw new Error('as descrições não couberam no espaço do jogo');
+      buf.set(enc, pos);
+      var rel = reg.start + pos - DESC_BASE;
+      ptrs[i * 2] = rel & 255; ptrs[i * 2 + 1] = rel >> 8;
+      pos += enc.length + 1;
+    }
+    ed.writes.push({ file: 'slus', off: reg.start, data: buf });
+    ed.writes.push({ file: 'slus', off: DESC_PTR, data: ptrs });
+  }
+
   // Carta personalizada: troca arte, miniatura, título desenhado, nome, descrição, atributos e drops de uma carta.
   function applyCustom(ed, cc, log) {
     var id = cc.slot | 0;
@@ -303,7 +339,7 @@
     }
     if (cc.title) { var tt = b64(cc.title); if (tt.length === 0x2A0) ed.writes.push({ file: 'mrg', off: rec + 0x2840, data: tt }); }
     if (cc.name) writeText(ed, NAME_PTR, NAME_BASE, id, cc.name);
-    if (cc.desc != null && cc.desc !== '') writeText(ed, DESC_PTR, DESC_BASE, id, cc.desc);
+    if (cc.desc != null && cc.desc !== '' && !ed.descRepacked) writeText(ed, DESC_PTR, DESC_BASE, id, cc.desc);
     (cc.drops || []).forEach(function (d) {
       if (d.duelist >= 1 && d.duelist <= DUELISTS && POOLS[d.pool] != null && d.rate > 0 && d.rate < 2048) setRate(ed, d.duelist, d.pool, id, d.rate | 0);
     });
@@ -448,6 +484,15 @@
       ed.writes.push({ file: 'mrg', off: COSTS, data: costs });
       log.push('preço das senhas ' + (div === 'gratis' ? '1 starchip' : (div === 1 ? 'normal' : '÷' + div)) + (o.buyAll ? ', proibidas à venda' : ''));
     }
+    if (o.lang === 'pt') {
+      var PT = (typeof window !== 'undefined' && window.FM_LANG_PT) || (typeof globalThis !== 'undefined' && globalThis.FM_LANG_PT);
+      if (!PT || PT.length !== CARDS) throw new Error('tradução não carregada');
+      var texts = PT.map(function (t) { return wrapText(t, 20); });
+      (o.custom || []).forEach(function (cc) { if (cc && cc.slot && cc.desc) texts[cc.slot - 1] = wrapText(cc.desc, 20); });
+      repackDescriptions(ed, texts);
+      ed.descRepacked = true;
+      log.push('descrições em português');
+    }
     // cartas personalizadas: os atributos entram junto com as edições de carta
     var cardEdits = Object.assign({}, o.cards || {});
     (o.custom || []).forEach(function (cc) {
@@ -548,5 +593,5 @@
 
   return { open: open, apply: apply, buildPatch: buildPatch, PRESETS: PRESETS, fixSector: fixSector, cardInfo: cardInfo,
     TYPES: TYPES, ATTRS: ATTRS, STARS: STARS, TERRAIN_LEVELS: TERRAIN_LEVELS,
-    nameRoom: nameRoom, descRoom: descRoom, descOf: descOf, plain: plain };
+    nameRoom: nameRoom, descRoom: descRoom, descOf: descOf, plain: plain, descRegion: descRegion };
 });

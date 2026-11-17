@@ -231,7 +231,7 @@
     if (c.password) meta += '<br>Senha ' + c.password + (c.cost && c.cost < 999999 ? ' · ' + c.cost + ' estrelas' : '');
     openSheet('<div class="hero">' + art(id) + '<div><h2>' + esc(c.name) + '</h2><div class="meta">#' +
       ('00' + id).slice(-3) + '<br>' + meta + '</div></div></div>' +
-      (c.desc ? '<p class="desc">' + esc(c.desc.replace(/\n/g, ' ')) + '</p>' : '') +
+      (c.desc ? '<p class="desc">' + esc(modOpts.lang === 'pt' && window.FM_LANG_PT ? window.FM_LANG_PT[id - 1] : c.desc.replace(/\n/g, ' ')) + '</p>' : '') +
       '<h3>Onde dropa</h3>' +
       (rows.length ? legend() + rows.map(function (x) {
         return '<div class="drop"><button class="who" data-duelist="' + x.d.id + '">' + esc(x.d.name) +
@@ -339,7 +339,7 @@
   /* ---------- Mod ("GameShark") ---------- */
 
   var mod = { blob: null, caps: null, ed: null, error: '', busy: false };
-  var MOD_DEFAULT = { cards: {}, rituals: {}, custom: [], starter: null, randomizer: { on: false, seed: 1, decks: false }, dropPool: 'rank', deckLimit: 3, terrain: 'normal', priceDiv: 1, buyAll: false,
+  var MOD_DEFAULT = { lang: 'en', cards: {}, rituals: {}, custom: [], starter: null, randomizer: { on: false, seed: 1, decks: false }, dropPool: 'rank', deckLimit: 3, terrain: 'normal', priceDiv: 1, buyAll: false,
     freeDuel: true, drops: 100, starchips: 0, lp: 8000, allDrops: true, megamorph: true, difficulty: 'normal' };
   var modOpts = (function () {
     try { return Object.assign({}, MOD_DEFAULT, JSON.parse(localStorage.getItem('modOpts') || '{}')); } catch (e) { return Object.assign({}, MOD_DEFAULT); }
@@ -392,6 +392,8 @@
       segOpt('priceDiv', 'Preço das cartas por senha', 'Custo em starchips na loja de senhas',
         [[1, 'Normal'], [2, '÷2'], [5, '÷5'], [10, '÷10'], ['gratis', '1 ★']]) +
       tog('buyAll', 'Vender as cartas "proibidas"', 'Cartas com senha mas preço 999999 (Blue-eyes, Exodia…) passam a custar 99999 antes do desconto') +
+      (c.lang ? segOpt('lang', 'Idioma das descrições das cartas', 'Português: as 722 descrições traduzidas (sem acento, o jogo não tem essas letras). Nomes das cartas continuam em inglês.',
+        [['en', 'Inglês'], ['pt', 'Português']]) : '') +
       '<h3>Editores</h3><div class="stack">' +
       '<button class="secondary" id="btnEditCards">Editar cartas' + countTag(modOpts.cards) + '</button>' +
       '<button class="secondary" id="btnEditRituals">Editar rituais' + countTag(modOpts.rituals) + '</button>' +

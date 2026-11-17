@@ -1,0 +1,180 @@
+1|Carta raríssima com ataque e defesa insuperáveis.
+2|Elfa delicada, fraca no ataque, mas com defesa incrível graças ao poder místico.
+3|Gigante de um olho só, com braços grossos feitos para golpes devastadores.
+4|Bem mais que um filhote, este dragão guarda um poder ainda adormecido.
+5|Criatura esquiva que parece uma estátua inofensiva até atacar.
+6|Diabinho brincalhão que espreita no escuro esperando um inimigo distraído.
+7|Dragão que guarda fortalezas nas montanhas. Ataca num mergulho vindo do nada.
+8|Vive em lugares úmidos e lança esporos venenosos nos inimigos.
+9|Fera fantasma do deserto, perigosa quando aparece em grande número.
+10|Dragão das profundezas da escuridão. Enxerga mal, o que prejudica sua defesa.
+11|Coberto de espinhos como espadas, nada fica em seu caminho quando investe.
+12|Armado com um porrete de espinhos que destrói quase tudo. Dizem ter um irmão tão destruidor quanto ele.
+13|Dispara balas de canhão pela boca contra inimigos distantes.
+14|Monstro touro das florestas. Investe com dois chifres afiados.
+15|Lutador com o poder do fogo. Ataca com uma espada que lança chamas.
+16|Feiticeiro que dobra o tempo à sua vontade. Parece fraco, mas as aparências enganam.
+17|Membro proibido selado por magia. Quem quebrar o selo terá poder infinito. Só uma cópia por deck.
+18|Membro proibido selado por magia. Quem quebrar o selo terá poder infinito. Só uma cópia por deck.
+19|Membro proibido selado por magia. Quem quebrar o selo terá poder infinito. Só uma cópia por deck.
+20|Membro proibido selado por magia. Quem quebrar o selo terá poder infinito. Só uma cópia por deck.
+21|Unido aos braços e pernas, este monstro se liberta das correntes mágicas. Só uma cópia por deck.
+22|Ser de poderes sombrios que confunde o inimigo. Carta rara entre os DEMÔNIOS.
+23|Verme criado pelas trevas. Surge do chão de repente para atacar.
+24|Fantasma esquelético fraco, mas perigoso em grande número.
+25|Diabinho das trevas. Seu único chifre o torna um oponente temível.
+26|Monstro de força tremenda. Destrói inimigos com um golpe de machado.
+27|Pequeno, mas compensa com defesa quando luta na campina.
+28|Protegido por um corpo de rocha, dá socos que quebram ossos.
+29|Guerreiro firme que se move rápido em terreno difícil.
+30|Esqueleto guerreiro de aparência frágil, famoso por ataques rápidos e precisos.
+31|Dragão cruel que cospe fogo. Suas chamas corrompem a alma das vítimas.
+32|Dragão de duas cabeças, raro e incomum.
+33|Para este guerreiro de porrete, a batalha só termina em vitória ou derrota.
+34|Palhaço que surge do nada e faz movimentos estranhos para fugir dos ataques.
+35|O mago supremo em ataque e defesa.
+36|Monstro com cabeça de serpente venenosa. Um olhar transforma o inimigo em pedra.
+37|A destreza de um guerreiro unida à velocidade de um dragão: uma força ofensiva poderosa.
+38|Cavaleiro num cavalo mais rápido que o vento. Sua investida é temível.
+39|Dragão maligno que usa forças das trevas num ataque poderoso.
+40|Jarro com estranhos entalhes. Tem defesa muito alta.
+41|Elfo que aprendeu a usar espada e confunde inimigos com ataques relâmpago.
+42|Controla os ataques inimigos com ilusões. Carta muito rara.
+43|Lutador de aparência comum, mas com ataque surpreendentemente alto.
+44|Boneca com poder místico. Muito forte contra as forças das trevas.
+45|Ataca os inimigos com trovões.
+46|Seu couro duro desvia praticamente qualquer ataque.
+47|Não defende tão bem quanto parece, mas seu chifre afiado ajuda no ataque.
+48|Pequeno monstro de três olhos, perigoso no escuro.
+49|Formiga gigante da selva. Forte em ATK e DEF.
+50|Costuma andar em enxames. Seu ambiente ideal é a floresta.
+51|Lagarto de couro muito duro e mordida cruel.
+52|Besouro enorme de couro duro e chifre perigoso.
+53|Abelha gigante de força excepcional. Perigosa em enxame.
+54|Barata grande e redonda que rola sobre os inimigos. Sua defesa a torna temível.
+55|Pulga gigante sugadora de sangue, devastadora no ataque.
+56|Fraca como larva, mas temível quando vira uma mariposa colossal.
+57|Mariposa gigante da floresta que espalha pó venenoso com as asas.
+58|Sozinha parece pouca coisa, mas no escuro ataca em bando.
+59|Mamute que protege o cemitério da manada. Não perdoa ladrões de túmulos.
+60|Tubarão branco gigante de dentes afiados.
+61|Lobo raro com um faro poderoso para achar inimigos.
+62|Criatura humana com asas. Linda de ver, mas letal em batalha.
+63|Três irmãs ferozes que atacam em equipe sem descanso.
+64|Guerreiro-fera rápido e forte que usa machado.
+65|Lobo da neve, lindo de ver, mas cruel em batalha.
+66|Caçador de homens com braços que esmagam rochas.
+67|A forma final do inseto supremo, a Grande Mariposa!
+68|Guerreiro-fera com cabeça de dragão que gira um machado.
+69|Dragão que cresceu e evoluiu por mil anos.
+70|Lula gigante que surge das profundezas para atacar inimigos distraídos.
+71|Água-viva quase invisível que vaga pelo mar.
+72|Capaz de transformar larvas em adultos num instante.
+73|Dragão marinho chamado de "Rei do Oceano". Ataca com ondas gigantes.
+74|Guerreiro gigante de pedra. Seus socos fazem a terra tremer.
+75|Planta carnívora bonita de ver, mas perigosa de perto.
+76|Crocodilo cruel e inteligente. Escamas duras formam sua armadura.
+77|Serpente traiçoeira que enrola o inimigo e o esmaga até a morte.
+78|Monstro de machado com força e agilidade tremendas.
+79|Nada detém este dinossauro coberto de espinhos.
+80|Dinossauro veloz que dilacera inimigos com garras afiadas.
+81|Dragão poderoso com dentes que moem quase tudo.
+82|Carta muito rara com ATK alto.
+83|Gera escuridão que envolve tudo ao seu redor.
+84|Defesa forte e uma foice enorme que corta quase tudo.
+85|Usa o poder das trevas para destruir os inimigos.
+86|Voa no escuro atacando com seus braços longos e peludos.
+87|Monstro que cospe fogo e vive no submundo.
+88|Demônio que guarda os tesouros do submundo. Defesa alta no escuro.
+89|Protegido pelo casco, lança projéteis com sua catapulta.
+90|Usa seu poder místico para proteger os fracos e dar apoio espiritual.
+91|Metade homem, metade cavalo, famoso por sua enorme velocidade.
+92|Combinação poderosa e imparável de touro e cavalo.
+93|Prefere duelos um contra um. Sua lâmina rápida acaba com tudo num instante.
+94|Dragão enfraquecido que não voa mais, mas ainda é uma força temível.
+95|Palhaço do Circo das Trevas que suga a força dos inimigos com danças estranhas.
+96|Guerreiro vindo do além. Golpeia às cegas com uma lâmina devastadora.
+97|Dragão revivido por feitiçaria. Seu sopro é muito corrosivo.
+98|Palhaço revivido pelas trevas. Sua dança estranha já derrotou muitos monstros.
+99|Rei abóbora que ataca com seus longos tentáculos.
+100|Guerreiro que luta de mãos nuas.
+101|Voando com asas de fogo carmesim, ataca lançando chamas do corpo.
+102|Máscara sombria criada pelas mãos de um mago das trevas.
+103|Espelho maligno e indestrutível que bloqueia ataques.
+104|Cortina tecida por um feiticeiro. Dizem aumentar o poder de quem usa magia.
+105|Pequeno, mas tão cruel que ataca amigos e inimigos sem distinção.
+106|Espírito do vento que navega pelo céu. Cria tempestades quando está de mau humor.
+107|Ataca com o corpo e com a sombra, o que o torna difícil de vencer.
+108|Lugar de descanso final que fortalece os condenados e enfraquece os vivos.
+109|Deusa com um olho que tudo vê e tudo revela.
+110|Samurai do Oriente armado com uma espada afiada.
+111|Anjo que governa os condenados e os julga quando preciso.
+112|Monstro vil que se fortalece sugando a vida dos oponentes.
+113|Toda cinza, esta fera raramente foi vista por olhos mortais.
+114|Ladrão cavalheiro que escapa da lei mesmo chamando atenção com cartola e capa branca.
+115|Mago que controla o caos e usa uma foice poderosa.
+116|Criatura muito tóxica que causa pesadelos e ataca com quatro ferrões venenosos.
+117|Espírito dos livros com conhecimento infinito e estratégias sem fim.
+118|Elfa fofa que ajuda contra os inimigos sem ser vista.
+119|Julga os inimigos presos em caixões.
+120|Sua dança misteriosa leva os inimigos ao sono eterno.
+121|Vive dormindo, mas é muito perigoso quando acorda.
+122|Dragão invocado de um pergaminho para atacar. Tem defesa baixa.
+123|Flor cruel nascida em solo poluído e adubada pelas trevas.
+124|Máquina de destruição achada nas ruínas de uma civilização antiga.
+125|Pássaro de cauda longa que ataca com a luz que emana de todo o corpo.
+126|Chamado de rei dos guerreiros, mas ninguém viveu para contar como ganhou a fama.
+127|Guerreiro silencioso e veloz, especialista em ataques surpresa.
+128|Feiticeiro que vive na lua e ataca com o poder da luz lunar.
+129|Criatura infantil que usa um espírito do sono para levar inimigos ao sono eterno.
+130|Controla o clima. É por isso que o tempo nas montanhas muda tanto.
+131|Criatura com cabeça de peixe e tentáculos de polvo que ataca com lanças.
+132|Zumbi que surgiu do túmulo 13, que deveria estar vazio.
+133|Guerreiro protegido por um casco que aguenta até chamas ardentes.
+134|Corrente mística que prende os inimigos e impede seus ataques.
+135|Braços longos saem do Pântano do Caos para arrastar os inimigos.
+136|De smoking preto como a noite, preside sobre os condenados.
+137|Distorcendo a realidade, braços saem de outra dimensão para atacar.
+138|Guerreiro de granito com alma de dragão e uma espada poderosa.
+139|Dizem que transforma inimigos em zumbis com um raio estranho dos olhos.
+140|Sapo mago milenar que ataca com um exército de girinos.
+141|Caracol nascido das trevas com braços e pernas para ataques rápidos.
+142|Ataca com magias de fogo como o "Mar de Chamas" e o "Muro de Fogo".
+143|O primeiro de uma linhagem de golens que surge de um anel dimensional.
+144|Controla o ar para criar ventos violentos e tornados contra os inimigos.
+145|Ladrão chamativo de capa preta que usa uma bengala mágica.
+146|Templo estranho de caveiras que suga a vida de quem se aproxima.
+147|Guerreiro escondido num ovo que ataca jogando cascas.
+148|Sombra viva do reino das trevas. Paralisa os inimigos para impedir ataques.
+149|Gigante que sai de uma lâmpada mística e obedece ao dono dela.
+150|Criatura misteriosa que vive no fundo do mar.
+151|Guerreiro com a Espada das Chamas Carmesim. Usa o fogo para prender os inimigos.
+152|Derrete na terra, se funde à sombra do oponente e ataca por baixo.
+153|Espírito vivo que se alimenta da essência vital dos inimigos.
+154|Aplica castigos com suas flechas flamejantes.
+155|Criatura veloz como um pássaro que estrangula o inimigo com braços finos.
+156|Armadura viva que ataca com uma investida de quebrar ossos.
+157|Planta que cospe fogo e cresce perto de vulcões.
+158|Planta carnívora com tentáculos venenosos.
+159|Enrola o corpo de serpente, gira e ataca com o bico.
+160|Especialista em ataques combinados. Usa magnetismo para impedir a fuga do inimigo.
+161|Especialista em ataques combinados. Tem uma armadura magnética resistente.
+162|Cérebro parasita que se alimenta do conhecimento dos oponentes.
+163|Criatura de olhos de safira que cria visões para confundir o inimigo.
+164|Ser vil que engana os inimigos e os leva à destruição.
+165|A mão do julgamento final faz ataques intensos contra o inimigo.
+166|Mestre de marionetes que manipula os inimigos na batalha.
+167|Jarro frágil do passado que guarda uma criatura misteriosa.
+168|Chamas ardentes que eliminam inimigos num piscar de olhos.
+169|Rei do submundo. Dizem que já teve poder para governar as Trevas.
+170|Espírito que acalma a alma com a música de sua harpa.
+171|Coberto de olhos hipnóticos que hipnotizam os inimigos.
+172|Guerreiro estranho que usa três lâminas temíveis com as mãos e a cauda.
+173|Manipula a luz para apagar qualquer sinal de sua presença.
+174|Tornado que corre solto pelo deserto cortando inimigos com lâminas de vento.
+175|Exilado da realidade, é hábil em lutar no escuro.
+176|Olho alado envolto em chamas que ataca com fogo.
+177|Tartaruga cruel de casco com espinhos.
+178|Braços que se esticam e garras afiadas o tornam um oponente temível.
+179|Mago que congela os movimentos do inimigo com uma só maldição.
+180|Donzela nas flores que espalha pólen venenoso nos oponentes.

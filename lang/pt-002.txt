@@ -1,0 +1,180 @@
+181|Seu cristal emite uma luz ofuscante que cega os inimigos.
+182|Guerreiro dançarino que faz picadinho dos oponentes com uma foice afiada.
+183|Criatura magra e esguia protegida por um poder sagrado.
+184|Usa truques de mão incríveis para enganar e destruir os inimigos.
+185|Copia a aparência dos inimigos para confundi-los e destruí-los.
+186|Pássaro-fera que chama reforços com um espelho de mão.
+187|Tem um portal na barriga para invocar monstros do submundo.
+188|Criatura feia de duas cabeças com uma boca que dispara lasers.
+189|Gato monstruoso com asas e uma cauda longa que golpeia.
+190|Mago cujos encantamentos entorpecem os monstros inimigos.
+191|Nuvem perigosa protegida por trovões que ataca com chuva ácida.
+192|Anjinho cuja fofura derrete o coração dos inimigos.
+193|Tigre dentro de uma casca protetora que ataca com presas afiadas.
+194|Habitante dos pântanos e servo das forças das Trevas.
+195|Imprevisível, se divide em dois e ataca por lados opostos.
+196|Guerreiro amonite que protege os mares desde o início dos tempos.
+197|Criatura da noite que ataca com braços movidos a foguete.
+198|Anjinho que dispara raios de felicidade da joia na testa.
+199|Parece um pinguim: desliza de barriga e golpeia com a espada estendida.
+200|Dragão minúsculo famoso por ataques cruéis.
+201|Fera selvagem que bate nos inimigos com um grande bambu.
+202|Castor alado com chifre que joga bolotas do céu com mira incrível.
+203|Espíritos malignos que vagam pelo mundo dos vivos sem achar descanso.
+204|Monstro em forma de canhão que dispara olhos no inimigo.
+205|Criatura feia e derretida que solta gás venenoso.
+206|Gira os braços como chicotes para atacar a média distância.
+207|Com um grito de gelar o sangue, ataca com seu bico enorme.
+208|Anjinho rápido e minúsculo, muito difícil de acertar.
+209|Ataca girando os braços em forma de foice.
+210|Criatura de fogo muito quente que atropela tudo no caminho.
+211|Guarda raios no corpo para dar ataques eletrizantes.
+212|Monstro enorme de um olho que dispara um raio intenso.
+213|Mago das águas que cria uma parede líquida para esmagar os inimigos.
+214|Sósia do soberano da Chama Azul. Mestre espadachim com uma lâmina fina.
+215|Espírito de fogo que queima tudo em seu caminho.
+216|Espírito da floresta protegido pelas plantas ao redor.
+217|Criatura raríssima nascida da fusão de uma fera incomum com um dragão cruel.
+218|Dinossauro de mandíbulas esmagadoras. Guarda eletricidade no chifre e solta raios pela boca das costas.
+219|Guerreiro-fera com uma foice enorme que suga o espírito dos inimigos.
+220|Mago misterioso cujo rosto fica sempre escondido atrás de uma máscara.
+221|Aranha enorme e inteligente que prende os inimigos na teia.
+222|Criatura alada que, dizem, aparece à meia-noite.
+223|Serpente marinha gigante que cria ondas para acabar com os inimigos.
+224|Guerreiro mestre em armadilhas, como um poço sem fundo para prender oponentes.
+225|Poucos escaparam de sua maldição. Quem escapou ganhou um poder imenso.
+226|Rápido e cruel, agarra a vítima com pinças e ataca com o ferrão venenoso.
+227|Estrela-do-mar cruel que cospe ácido para derreter os inimigos.
+228|Zumbi que surgiu dos restos do senhor da floresta.
+229|Permite ganhar poder em troca da própria vida.
+230|Peixe incomum e feroz com cabeça de fera.
+231|Criatura de sorriso desagradável que usa uma foice para desviar golpes.
+232|Arma viva que dispara projéteis pela boca.
+233|Espírito do mundo dos sonhos. Ataca os inimigos enquanto dormem.
+234|Bela mestra da espada com movimentos muito ágeis.
+235|Guerreiro que vive há muito tempo na floresta, protegido pela Mãe Natureza.
+236|Guerreiro que guarda a entrada do submundo.
+237|Boneco de barro que protege o tesouro nas tumbas de reis antigos.
+238|Coqueiro com vontade própria que ataca jogando cocos.
+239|Guerreira que serve às forças das trevas.
+240|Olho com pernas que salta alto e finaliza com garras afiadas.
+241|Armado com a Espada Psíquica, este bandido sinistro domina as terras distantes.
+242|O destino do oponente é decidido quando a chama de cada dedo se apaga.
+243|Espírito da água que envolve o oponente em neblina para esconder seu ataque.
+244|Monstro nascido nos poços de lava. Gera um calor que derrete os inimigos.
+245|Demônio-olho criado por um servo das trevas. Usa "Esferas Sombrias" contra os inimigos.
+246|Criatura com uma espada que tira poder da vida de suas vítimas.
+247|Anfíbio que chama ondas gigantes dos mares sombrios para varrer os inimigos.
+248|Dupla temível: um domador de feras e seu servo fiel.
+249|Transforma a água que transborda de um jarro em dragões de ataque.
+250|Guerreiro de gelo cujo menor toque congela o oponente.
+251|Sereia linda que atrai viajantes para um túmulo de água.
+252|Gato que parece fofo, mas arranha com garras afiadas.
+253|Criatura que escolheu o caminho da feitiçaria para virar bruxa.
+254|Monstro repulsivo com uma barriga enorme que engole quase tudo.
+255|Protegido por um couro coberto de pelos grossos.
+256|Abre fendas dimensionais para prender os inimigos.
+257|Com pelo duro como pedra, tem uma defesa excelente.
+258|Transforma o chão em areia movediça para prender os inimigos.
+259|Lutador mestre que usa vários bastões para nocautear os inimigos.
+260|Bela deusa da lua que ergue uma cortina lunar contra ataques.
+261|Espelho maligno que hipnotiza quem olha e o deixa vulnerável.
+262|Guerreiro elfo montado num lagarto enorme.
+263|Golem de pedra que transforma oponentes em rocha e os reduz a pó.
+264|Escondido na casca do ovo, bloqueia ataques com suas asas enormes.
+265|Grande Rei dos Sete Mares. Invoca ondas gigantes para afogar o inimigo.
+266|Rainha das espadas, quase imbatível com qualquer lâmina que existe.
+267|Sua velocidade cria um vácuo tão forte que corta o couro dos monstros.
+268|Feiticeiro das trevas que invoca uma mão gigante para arrastar oponentes ao submundo.
+269|Senhor da destruição nascido das trevas. Invoca tempestades contra os oponentes.
+270|Espírito da chuva que invoca tufões para varrer os inimigos.
+271|Seus olhos sinistros soltam raios perfurantes nos inimigos.
+272|Parente da fênix que vive nas montanhas. Seu sopro de fogo é escaldante.
+273|Com seu vasto conhecimento, bloqueia quase qualquer ataque.
+274|Jovem rei das florestas que vive num mundo verde cheio de árvores e animais.
+275|Robô blindado terrestre que, dizem, já teve armas para atacar no mar.
+276|O Sol e o Vento Norte se unem num combo devastador de calor e ventania.
+277|Ovo de górgona com olhos que, dizem, criam a criatura que cruzar seu olhar.
+278|Ninguém sabe que criatura pode nascer desta larva misteriosa.
+279|Espectro que vive numa cortina de fumaça ofuscante.
+280|Protege o trono do rei contra usurpadores.
+281|Nada detém o ataque furioso desta criatura poderosa.
+282|Ovelha monstruosa com cauda longa que hipnotiza e enfraquece os inimigos.
+283|Máquina que gera imagens para confundir os inimigos e deixá-los expostos.
+284|Mago que corrompe o yin e o yang para criar um poder distorcido.
+285|Serpente de um olho que sopra um bafo gelado para congelar os oponentes.
+286|Máquina indestrutível feita para proteger entradas importantes.
+287|Ogro possuído pelas trevas. Poucos aguentam sua investida rápida.
+288|Artista louco que cria obras de arte para esmagar os inimigos.
+289|Gosma que muda de forma e pode imitar outras criaturas.
+290|Servo da deusa da lua que usa uma lança com lâmina em forma de meia-lua.
+291|Criatura maligna envolta em chamas que ataca com fogo intenso.
+292|Anfíbio com poderes extrassensoriais que bloqueia ataques.
+293|Mestre espadachim lendário, veterano de mais de 100 batalhas.
+294|Guerreiro com equipamento feito de escamas de dragão.
+295|Criatura monstruosa nascida de um experimento que deu errado.
+296|Usa o escudo para se proteger e também para atropelar os inimigos.
+297|Soldado mecânico imparável movido pelas forças das trevas.
+298|Dragão de duas cabeças com mandíbulas cruéis que esmagam os inimigos.
+299|Donzela que usa o som a seu favor, com uma foice em forma de nota musical.
+300|Pássaro cruel que ataca do céu com sua cauda de chicote.
+301|Espada que tira o melhor dos guerreiros. Servos das trevas não podem usá-la.
+302|Forças das trevas aumentam o poder dos Guerreiros!
+303|Forças das trevas aumentam o poder dos Demônios e outros monstros das Trevas!
+304|Demônios e Guerreiros-Fera usam sempre sua força máxima!
+305|Arma os Insetos com um laser poderoso!
+306|Faz os Insetos dispararem uma rajada de fogo!
+307|Aumenta o poder dos elfos com uma luz mística!
+308|Aumenta o poder das Feras e outros monstros com presas!
+309|Fortalece monstros com casco! Dizem não funcionar em quem não tem casco.
+310|Micróbios aumentam o poder das Plantas da floresta!
+311|Este pingente dá mais poder aos feiticeiros das Trevas!
+312|Arco e flecha de prata que aumentam o poder das Fadas.
+313|Aumenta o poder de criaturas com chifres! Não funciona em monstros das Trevas.
+314|Aumenta o poder dos monstros das Trevas com chifres!
+315|Tesouro lendário que aumenta o poder dos dragões.
+316|Chicote que paralisa inimigos. Fica mais forte nas mãos de criaturas femininas.
+317|Aumenta o poder dos monstros femininos mudando sua atitude.
+318|Cria duas cópias da Harpie Lady para um ataque triplo!
+319|A luz da lua aumenta o poder das Feras!
+320|Coloca um monstro do oponente que está em defesa na posição de ataque.
+321|Forças diabólicas aumentam o poder de monstros femininos e das Trevas!
+322|Forças místicas do cristal aumentam o poder dos Zumbis.
+323|Livro mágico que aumenta o poder dos magos. Feiticeiros malvados não podem usá-lo.
+324|Aumenta o poder dos monstros Trovão, Rocha e Pyro.
+325|Fábrica que dá um upgrade em todos os monstros Máquina.
+326|Absorve a energia do sol para aumentar o poder dos Dinossauros!
+327|Os ventos aumentam o poder das Bestas Aladas e outros monstros voadores!
+328|A força de Poseidon aumenta o poder dos monstros Aqua, Peixe e Serpente Marinha!
+329|Destrói todos os Dragões do oponente no campo!
+330|Muda o campo a favor de Guerreiros-Fera, Insetos, Plantas e Feras!
+331|Muda o campo a favor de Zumbis, Dinossauros e Rochas!
+332|Muda o campo a favor de Dragões, Bestas Aladas e Trovões!
+333|Transforma o campo em campina, a favor de Guerreiros e Guerreiros-Fera!
+334|Muda o campo a favor de Aqua e Trovão, e contra Máquina e Pyro!
+335|Muda o campo a favor de Magos e Demônios, e contra Fadas!
+336|Suga todas as cartas em jogo no campo!
+337|Destrói todos os monstros do oponente com um raio!
+338|Um curry delicioso que aumenta os Pontos de Vida em 200!
+339|Poção mágica que aumenta os Pontos de Vida em 500!
+340|Erva de goblin que aumenta os Pontos de Vida em 1000!
+341|Poção de fada que aumenta os Pontos de Vida em 2000!
+342|Poder místico que aumenta os Pontos de Vida em 5000!
+343|Uma chuva de faíscas tira 50 Pontos de Vida do oponente!
+344|Uma bola de fogo tira 100 Pontos de Vida do oponente!
+345|Chamas tiram 200 Pontos de Vida do oponente!
+346|Chamas tiram 500 Pontos de Vida do oponente!
+347|Um inferno de fogo tira 1000 Pontos de Vida do oponente!
+348|Revela os monstros inimigos e o oponente não pode atacar por três turnos.
+349|Uma maldição diminui o poder de todos os monstros inimigos!
+350|Uma luz ofuscante revela todos os monstros no campo.
+351|Monstro que ataca quem tenta abrir sua tampa.
+352|Espadachim que flutua como borboleta e ferroa como abelha.
+353|Criatura com barbatanas, parente distante dos Dragões marinhos.
+354|Bicho de pelúcia fofo que morde.
+355|Máquina misteriosa do fim do mundo vinda dos confins do universo.
+356|Leão muito cruel com garras longas e afiadas.
+357|Monstro de três cabeças que cospe fogo.
+358|Dragão sagrado que queima a maldade com chamas místicas.
+359|Ossudo e Gordinho, uma dupla amigável de esqueletos.
+360|Monstro enorme e brutal que ataca com garras afiadas.

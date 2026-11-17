@@ -1,0 +1,180 @@
+361|Pinguim raro que voa com as asas da cabeça.
+362|Candidato a Item do Milênio que, dizem, bloqueia qualquer ataque poderoso.
+363|Voa por aí espalhando felicidade para todos.
+364|Guerreiro poderoso com a mesma força do lendário Blue-eyes White Dragon.
+365|Espelho arcano que puxa os inimigos para o mundo do espelho.
+366|Paredes surgem no campo formando um labirinto sem saída.
+367|Aranha monstruosa que vive debaixo da terra.
+368|Zumbi perigoso que rasteja no escuro.
+369|Monstro muito rápido que corre pelas paredes para atacar.
+370|Tanque que percorre o labirinto caçando inimigos.
+371|Golem que ataca com raios, como os Irmãos do Labirinto.
+372|Golem que controla os ventos, como os Irmãos do Labirinto.
+373|Golem que ataca com água, como os Irmãos do Labirinto.
+374|Sanga, Kazejin e Suijin se unem num só monstro poderoso.
+375|Escondido sob o piso do labirinto, engole quem passa por cima.
+376|Mestre dos monstros que controla várias criaturas.
+377|Ryu-kishin fortalecido pelas trevas. Garras muito afiadas o tornam temível.
+378|Monstro formado pelas almas vingativas dos mortos em batalha.
+379|Gênio da lâmpada sempre às ordens de seu mestre.
+380|O dragão supremo, nascido da fusão de três Blue-eyes White Dragon.
+381|Monstro jacaré saído direto dos desenhos animados.
+382|Com um machado em cada mão, causa dano pesado.
+383|Dragão de desenho animado, mais perigoso do que parece.
+384|Coelho de desenho que pula para todo lado e é difícil de acertar.
+385|Caixa de surpresas especialista em ataques inesperados.
+386|O bichinho favorito das harpias, mas um dragão muito perigoso.
+387|Lâmpada usada por magos para misturar poções.
+388|Máquina de tortura horrível com uma grande lâmina de pêndulo.
+389|Armado com uma lança que queima a alma, prefere ataques mágicos.
+390|Aranha mecânica que lança foguetes explosivos.
+391|Só atinge todo o seu potencial na forma de metal.
+392|Zoa de metal capaz de ataques intensos.
+393|Criatura marinha que engole os inimigos e os digere devagar.
+394|Monstro de cauda de ferro com tesouras muito afiadas.
+395|Elfa que dança pelo céu com asas de lâminas afiadas.
+396|Assustador, usa olhos e orelhas enormes para notar qualquer movimento.
+397|Não é muito forte, apesar das presas e espinhos grandes.
+398|Rã-touro monstruosa com espinhos venenosos.
+399|Guerreiro do Oriente armado com uma espada amaldiçoada.
+400|Monstro réptil que cospe fogo.
+401|Monstro touro revivido pelas artes das trevas que sai de um jarro.
+402|Servo que vigia tudo de perto. Solta uma cortina de fumaça quando é descoberto.
+403|Monstro enorme com juba de leão, parecido com o "Rei das Feras".
+404|Monstro marinho veloz com corpo de cavalo e de peixe.
+405|Máquina descontrolada que empunha uma espada enorme.
+406|Máquina com várias lâminas escondidas no corpo quadrado.
+407|Robô de superliga que dispara rajadas de fogo dos dois braços.
+408|Gira um machado que faz a terra tremer e elimina inimigos num golpe.
+409|Dragão dourado que cospe fogo e queima quem estiver no caminho.
+410|Monstro mecânico em forma de aranha com foices nas pernas.
+411|Morcego mecânico que ataca soltando esferas explosivas.
+412|Lobo feito todo de ferro. Suas mandíbulas de aço mordem qualquer coisa.
+413|Soldados redondos que rolam por aí guardando o Rei Máquina.
+414|Armado com duas pás, é uma máquina de destruição ambulante.
+415|Caçador que persegue o alvo sem descanso por ordem do Rei Máquina.
+416|Cada parte do seu corpo é uma arma capaz de ataques devastadores.
+417|Relógio ambulante que adora mandar inimigos pelos ares.
+418|Golem de ferro enorme que surge de uma fenda dimensional.
+419|Gira uma enorme bola de espinhos para destruir os inimigos.
+420|Criada num laboratório no porão, esta máquina infernal lança foguetes pela boca.
+421|Força de ataque equipada com radares e sensores.
+422|Ser artificial criado num laboratório subterrâneo que às vezes enlouquece.
+423|Parecido com um tatu, vira um dado quando se enrola.
+424|Dragão parecido com um pássaro, com quatro asas de lâmina.
+425|Dragão que invoca trovões e raios contra os oponentes.
+426|Com o corpo todo de rocha, arremessa pedregulhos nos inimigos.
+427|Imperador dragão muito orgulhoso e poderoso.
+428|Apesar de fraca, lança magias que eliminam a escuridão.
+429|Deusa tímida que parece passar a maior parte do tempo dormindo.
+430|Cerca os oponentes com água e os envolve num ataque arrasador.
+431|Sereia muito agressiva com espinhos para atacar.
+432|Fada que vaga pelos mares. Dizem que pode invocar dragões marinhos.
+433|Dizem que este elfo vive há milhares de anos. Lidera um exército de espíritos.
+434|Rara maga armada com um chicote cruel.
+435|Criatura linda que dispara flechas de gelo.
+436|Golfinho branco com chifre que ataca chamando ondas gigantes.
+437|Tubarão violento que ataca tudo no mar.
+438|Peixe de aço com uma barbatana dorsal afiada.
+439|Nadadora linda, mas de temperamento péssimo.
+440|Peixe arco-íris raro, quase impossível de pescar.
+441|Carrega um canhão de plasma nas costas.
+442|Dragão que vive no mar e cospe jatos de água de alta pressão.
+443|Rei dos mares, protegido por um casco duro. Cospe bolhas venenosas.
+444|Monstro estranho de um olho armado com uma lança perigosa.
+445|Tritão guerreiro que ataca quem ousa poluir o mar.
+446|Hipnotiza os oponentes com a bola da cauda e os afoga.
+447|Serpente marinha que morde tudo que passa por perto.
+448|Fura os oponentes com os espinhos do corpo e os enche de eletricidade.
+449|Tartaruga gigante e bem protegida que vive há mais de 30000 anos.
+450|Anfíbio que jurou vingar a morte dos irmãos.
+451|Monstro caranguejo com duas tesouras enormes para cortar inimigos.
+452|Lagostim recém-evoluído com tesouras afiadas.
+453|Golem que protege um tesouro há quase mil anos.
+454|Golem com uma mão direita enorme para esmagar as vítimas.
+455|Investe contra os inimigos disparando dois canhões dos ombros.
+456|Guerreiro de rocha com uma espada pesadíssima esculpida em pedra.
+457|Explode de raiva e faz chover pedregulhos esmagadores.
+458|Monstro que julga os malfeitores e os castiga como merecem.
+459|Ataca os inimigos com ondas eletromagnéticas.
+460|Cospe uma gosma que prende os inimigos e depois os atordoa com choques.
+461|Monstro com dois chicotes elétricos no lugar dos braços.
+462|Ataca os inimigos com raios.
+463|Serpente que guarda eletricidade na cauda.
+464|Caçador dos céus que nunca errou um alvo.
+465|Juiz dos céus que dá a sentença com suas garras branco-prateadas.
+466|Mergulha e ataca com uma chuva de facas guardadas nas asas.
+467|Monstro em chamas carmesim que bate as asas e faz chover faíscas.
+468|Ataca os inimigos com seu bico enorme.
+469|Ninja azul que ataca com uma grande foice e pés com espinhos.
+470|Lança um feitiço de terror e confusão antes de atacar.
+471|Palhaço que alimenta um lagarto monstruoso com a vida dos inimigos.
+472|Sufoca o inimigo consumindo todo o ar ao redor.
+473|Guerreiro de fogo que solta um calor intenso do corpo.
+474|Monstro cruel que fatia inimigos com garras afiadas.
+475|Serpente voadora venenosa que não se move bem no chão.
+476|Aranha com tesouras que ataca tudo que cai na sua teia.
+477|Besouro-veado com chifre e braços serrilhados.
+478|Soldados insetos que atacam em enxame.
+479|Barata guerreira que se esconde em frestas e sai para atacar.
+480|Besouro-veado violento com um cortador afiado.
+481|Rato esperto com a garra esquerda afiada.
+482|Monstro muito perigoso com espinhos na cabeça e na cauda.
+483|Criatura maligna parecida com um leão alado.
+484|Envolve o inimigo e o digere devagar.
+485|Rola objetos enormes para esmagar os inimigos.
+486|Mago-livro com página após página de feitiços poderosos.
+487|Fera coberta de flores da cabeça aos pés.
+488|Flor com pétalas arco-íris que atraem o inimigo para sua boca.
+489|Flor perigosa que dispara projéteis de pólen.
+490|Bola coberta de agulhas. Costuma cair em grupo sobre os inimigos.
+491|Linda criatura parecida com um pavão que atira penas.
+492|Estrela cadente de cauda linda que causa dano ao atingir o inimigo.
+493|Mago vestido de azul que costuma ficar meditando.
+494|Sereia incomum que aparece sempre que um arco-íris cruza o céu.
+495|Guitarrista fantástico que ataca com ondas ultrassônicas.
+496|Coelho feroz com garras afiadas.
+497|Ermitão com cabeça de dragão.
+498|Demônio estranho de braços longos e garras afiadas.
+499|Ataca soprando teias. Ninguém sabe qual será a forma final deste inseto.
+500|Monstro temível enviado do submundo para destruir dragões.
+501|Corta e fatia com suas tesouras e se alimenta das vítimas.
+502|Com o poder dos dragões, usa uma espada feita de presa de dragão.
+503|Criatura parecida com uma raposa, com um casco protetor.
+504|Solta ácido pelos poros e derrete tudo que toca sua pele.
+505|Cristal transparente que concentra a luz num laser poderoso.
+506|Mariposa enorme que cria um redemoinho de pó venenoso.
+507|Peixe voador com a cabeça afiada para perfurar alvos.
+508|Dinossauro mecânico com um canhão de raios.
+509|Dinossauro colossal que pisoteia tudo no caminho.
+510|Flor risonha cujas gargalhadas enlouquecem o inimigo.
+511|Guerreiro planta que ataca com a espada e com projéteis de ervilha.
+512|Máquina muito destrutiva armada com um canhão poderoso.
+513|Robô sentinela com foguetes teleguiados que protege a sala do trono.
+514|Controla várias tesouras com resultado certeiro.
+515|Ídolo de pedra da Ilha de Páscoa que dispara anéis de laser pela boca.
+516|Irrita o oponente até ele perder o controle.
+517|Surge do subsolo e ataca com tentáculos longos como serpentes.
+518|Tartaruga de pedra com defesa muito alta.
+519|Lula de fogo que mantém as chamas até debaixo d'água.
+520|Tartaruga voadora rara que vive no mar.
+521|O sopro deste pássaro rouba a força vital das criaturas.
+522|Pássaro enorme famoso por seus mergulhos afiados.
+523|Os inimigos derrotados viram ingredientes deste monstro gourmet.
+524|Forma de vida extraterrestre que adora viver na água.
+525|A música de sua flauta drena a força de vontade do inimigo.
+526|Armado com uma foice enorme, dispara raios dos olhos grandes.
+527|Muitos acham que é um bichinho fofo, mas é uma fera muito perigosa.
+528|Monstro muito rápido que se enrola e atropela os inimigos.
+529|Fera em chamas, letal ao toque.
+530|Usa uma varinha para lançar vários feitiços no inimigo.
+531|Transforma inimigos em pedra e os reduz a pó.
+532|Elfos gêmeos que atacam o inimigo por lados opostos.
+533|Inseto com mandíbulas de besouro-veado e chifre de besouro.
+534|Monstro com quatro braços muito hábeis para ataques separados.
+535|Louva-a-deus humanoide com duas foices afiadas.
+536|Parecido com um camaleão, se esconde em qualquer lugar mudando de cor.
+537|Rola pelo chão soltando descargas elétricas nos inimigos.
+538|Engole inimigos inteiros e usa sua essência como energia.
+539|Tubarão zumbi que vaga pelas profundezas amaldiçoando quem cruza seu caminho.
+540|Fada fantasma que dispara inúmeras flechas em quem tenta atacar.

@@ -1,6 +1,7 @@
 // Gera um mod com o editor do app (web/mod.js) e grava a imagem resultante.
 // uso: node tools/mod-test.js base.bin saida.bin '{"drops":100,...}'
 const fs = require('fs'), FMMod = require('../web/mod.js');
+require('../web/lang-pt.js');
 const [, , input, output, json] = process.argv;
 const fd = fs.openSync(input, 'r');
 const blob = { name: input, size: fs.fstatSync(fd).size, read: async (a, b) => { const buf = Buffer.alloc(b - a); fs.readSync(fd, buf, 0, b - a, a); return new Uint8Array(buf); } };

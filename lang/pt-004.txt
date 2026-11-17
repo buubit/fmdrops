@@ -1,0 +1,182 @@
+541|Trava o inimigo com ventania e ataca com um machado de guerra enorme.
+542|Peixe lança-foguetes protegido por espinhos.
+543|Se alimenta da vida dos peixes que pega com sua língua comprida.
+544|Monstro mecânico muito preciso coberto de canhões de grosso calibre.
+545|Dragão zumbi esquelético que consegue voar pelos céus.
+546|Peixe enorme e bruto com braços, pernas e dentes afiados.
+547|Gira em volta do inimigo lançando folhas que cegam e sementes que doem.
+548|Rato zumbi que caça felinos.
+549|Gosma com cabeça de sapo que coaxa enquanto ataca.
+550|Serpente marinha estranha com uma boca enorme cheia de presas.
+551|Elfo malvado que adora uma briga.
+552|Cria tornados poderosos com suas asas enormes.
+553|Um Mushroom Man adulto com ataque maior.
+554|Irmão do Swamp Battleguard. Não é forte, mas defende bem.
+555|Dragão carmesim que cospe bolas de fogo.
+556|Monstro que vaga sem rumo procurando inimigos.
+557|Ídolo de aço adorado na Terra das Máquinas.
+558|Servo de feiticeiro não muito confiável.
+559|Guerreiro estranho vindo de outra dimensão.
+560|Criatura vinda de outra galáxia.
+561|Dragão menor de classe baixa que não consegue cuspir fogo.
+562|Larva com espinhos de aço que ataca os distraídos.
+563|Criatura inofensiva que costuma viver no sótão das casas.
+564|Elefante zumbi esquelético muito incomum, com ossos dourados brilhantes.
+565|Tubarão negro que sente quase qualquer cheiro na água.
+566|Serpente muito longa que aparece em lendas e mitos.
+567|Planta espinhosa das terras sombrias que se enrola em viajantes distraídos.
+568|Dinossauro humanoide sem muita força, mas com QI alto.
+569|Serpente sugadora de sangue em forma humana que ataca quem passa.
+570|Dragão listrado como tigre que corre pelo deserto com velocidade incrível.
+571|Dragão negro que vive nas selvas e come árvores.
+572|Imperatriz do Reino Dourado. Ninguém pode recusar sua vontade.
+573|Monstro muito feroz nascido de um T-Rex.
+574|Bruxa da floresta que vê tudo com o olho da testa.
+575|Cabra branca que vive na floresta há eras. Na verdade é uma anciã da mata.
+576|Escorpião escarlate raro que vive na tundra, não no deserto.
+577|Goblin narigudo muito sábio com poderes sobrenaturais.
+578|Mago de capa preta que, na verdade, é um leão falante disfarçado.
+579|Flor rara que desabrocha num abismo escuro como breu.
+580|Robô de ponta que elimina intrusos assim que os detecta.
+581|Este pássaro anuncia desgraças!!
+582|Criatura famosa da mitologia que julga com uma lança afiada.
+583|Tenta prever o tempo, mas quase sempre erra.
+584|Encurrala os inimigos e sela o poder deles.
+585|Caracol turbinado mecanicamente que continua tão lento quanto antes.
+586|Assume a forma do inimigo e copia cada movimento de ataque.
+587|Um Larvas muito evoluído, ainda mais forte que antes.
+588|Vaso vivo que cega os inimigos com pólen e ataca com dentes afiados.
+589|Ataca oponentes próximos esticando seus cipós azuis.
+590|Enrola os oponentes e os bica com seu bico enorme.
+591|Jarro grande que solta o monstro de dentro contra quem chega perto.
+592|Fada das artes e excelente harpista.
+593|Tartaruga monstruosa de casco carmesim que se alimenta de fogo.
+594|Rosa vermelha possuída por um espírito vil que suga a vida dos outros.
+595|Arrasta os inimigos para um mundo de espelho.
+596|Monstro que come o quanto quiser, mas nunca fica satisfeito.
+597|Com pele branco-azulada, esta criatura estranha é assustadora de ver.
+598|Monstro nascido de uma tentativa de enxertar asas em feras.
+599|Monstro capaz de trazer pancadas de chuva repentinas.
+600|Sela o lado bom de uma alma e cria um ser maligno.
+601|Fada fofa que se dedica ao amor eterno.
+602|Soldado pinguim de classe baixa que ataca em grupo.
+603|Fada dragão linda e poderosa.
+604|Rato do campo mal-educado que rói qualquer coisa.
+605|Forma de vida líquida que se move livremente na água.
+606|Criatura submarina que ataca com duas caudas de chicote.
+607|Monstro de bocarra enorme que engole o inimigo inteiro.
+608|O pacificador entre os monstros.
+609|Mosca monstruosa que mergulha com braços afiados como espadas.
+610|Lagarto que descarrega a eletricidade guardada no corpo.
+611|Servo dos demônios usado para fazer reconhecimento.
+612|Acalma as almas entoando um feitiço misterioso.
+613|Dragão Trovão de duas cabeças com ataques elétricos poderosos.
+614|Caçador que prende os inimigos na sua teia.
+615|Estrela-do-mar azulada com couro duro que aguenta ataques.
+616|Fada que controla os sentimentos e enche os outros de coragem.
+617|Criatura marinha de dentes afiados que não solta a vítima depois de morder.
+618|Guerreira marcada pela essência de mil campos de batalha.
+619|Ídolo de barro de um espírito da rocha. Tem bom ataque e defesa.
+620|Formado por várias serpentes que atacam separadas.
+621|Mago guerreiro vil, hábil em feitiços de destruição.
+622|Controla o ar e cria rajadas de vento para jogar o oponente longe.
+623|Antes de ele aparecer, o chão derrete sob os pés do oponente.
+624|Guerreiro anfíbio que se move com facilidade debaixo d'água.
+625|Fada que protege as fontes da poluição.
+626|Sereia sentinela a serviço do Rei do Mar e de seu reino.
+627|Rápido, desvia fácil dos ataques e contra-ataca com garras cruéis.
+628|Bruxa inexperiente que acabou de começar a estudar as artes místicas.
+629|Rato protegido por um pelo que parece armadura.
+630|Lagarto guerreiro pré-histórico e poderoso.
+631|Feiticeiro lunar que usa feitiços místicos para causar alucinações.
+632|Gigante feito de pedregulhos enormes.
+633|Mensageiro da vida que nasce.
+634|Lagarto guerreiro de escamas verdes dedicado a proteger o mar.
+635|Sósia de uma rainha, não muito útil.
+636|Pássaro que brilha com chamas azuis e tem o cabelo em forma de coroa.
+637|Protetor da floresta, esta árvore gigante não para de crescer.
+638|Rainha dos Espíritos das Árvores, envolta em belas folhas de outono.
+639|Unidade Bugroth adaptada para a guerra submarina.
+640|Lagarta gigante que cospe um ácido que derrete quase tudo.
+641|Rainha ardilosa que cobiça o trono enquanto o rei está fora.
+642|Ovelha de lã preta que sabe usar feitiçaria.
+643|Se esconde num disco e só aparece para atacar.
+644|Víbora muito veloz que cospe fogo.
+645|Soldado mecânico com vontade própria, criado para proteger a família real.
+646|Parece uma gosma qualquer, mas é bem mais forte!
+647|Anfíbio com ataque alto, mas defesa fraca.
+648|Máquina feita para atacar os inimigos de surpresa.
+649|Confunde os monstros inimigos com um barulho insuportável.
+650|Ataca do céu com uma cauda de chicote.
+651|Bumerangue com o efeito de duas cartas: Legendary Sword e Sword of Dark Destruction.
+652|Carta que aumenta o poder do Labyrinth Wall.
+653|Destrói todos os Guerreiros do oponente no campo.
+654|Aumenta a força de quem controla o poder de Salamandra.
+655|Cancela a magia nos monstros com nível reduzido e os deixa no nível 0.
+656|Elimina todos os Zumbis.
+657|Carta que aumenta o poder de um monstro escolhido em 2 níveis.
+658|Transforma um monstro escolhido em Máquina.
+659|Chifre que aumenta o poder das Fadas.
+660|Chuva ácida que destrói as Máquinas do oponente.
+661|Elimina os monstros do oponente em jogo com ATK de 1500 ou mais.
+662|Inseticida que acaba com os Insetos do oponente em jogo.
+663|Vento mágico que reduz a pó as Rochas do oponente em jogo.
+664|Uma rajada de calor seca e elimina os Peixes do oponente em jogo.
+665|Sacrifica o monstro de maior defesa e invoca Shield.
+666|Sacrifica Guerreiro-Fera, Dragão e Pyro para invocar Yamadron.
+667|Sacrifica Kazejin, Suijin e Sanga of the Thunder para invocar Gate Guardian.
+668|Luz ofuscante que aumenta o poder de todos os monstros.
+669|Diminui em dois níveis os monstros do oponente em jogo.
+670|Cerimônia para invocar Black Luster Soldier. Exige sacrifício.
+671|Cerimônia para invocar Zera. Exige sacrifício.
+672|Destrói todas as Magias do oponente em jogo.
+673|Cerimônia para invocar War Lion. Exige sacrifício.
+674|Cerimônia para invocar Fiend's Mirror. Exige sacrifício.
+675|Sacrifique três Blue-eyes para invocar Ultimate Dragon.
+676|Sacrifique Dançarino e Guerreiro para invocar Performance of Sword.
+677|Carta com os ingredientes de um hambúrguer delicioso.
+678|Sacrifique Guerreiro-Fera e Golem para invocar Sengenjin.
+679|Sacrifique Guerreiro e Portador de Foice para invocar Skull Guardian.
+680|Sacrifique um monstro com chifre para invocar Tri-Horned Dragon.
+681|Elimina do campo os monstros com ATK de 500 ou menos.
+682|Elimina do campo os monstros com ATK de 1000 ou menos.
+683|Se o monstro inimigo tiver ATK de 1500 ou menos, é eliminado do campo.
+684|Se o monstro inimigo tiver ATK de 2000 ou menos, é eliminado do campo.
+685|Se o monstro inimigo tiver ATK de 3000 ou menos, é eliminado do campo.
+686|Quando um monstro do oponente ataca, ele explode e é eliminado do campo.
+687|Devolve ao oponente o dano de cartas de ataque direto como Fire Sparks e Inferno.
+688|Inverte as cartas de cura e transforma os pontos em dano.
+689|Inverte as cartas de aumento de poder e as transforma em redução.
+690|Armadilha para enganar o oponente. Nada acontece quando é atacada.
+691|Escolha um monstro para sacrificar e invoque Serpent Night Dragon.
+692|Sacrifique caranguejo e tartaruga para invocar Crab Turtle.
+693|Sacrifique um mascarado para invocar uma máscara nova.
+694|Sacrifique 3 Demônios para o ritual da Ressurreição de Chakra.
+695|Sacrifique Titereiro e Máquinas para invocar a Marionete.
+696|Sacrifique o besouro-veado e o besouro para invocar Javelin Beetle.
+697|Sacrifique o Braço de Ashura e o Espadachim para invocar.
+698|Sacrifique uma Rainha comum para invocar Cosmo Queen.
+699|Sacrifique Templo e Barata para invocar Dokurorider.
+700|Sacrifique Chifre e Peixe Máquina para invocar a Fortaleza do Mar.
+701|Guerreiro dançarino com passos elegantes.
+702|Atrai inimigos famintos com cheiro gostoso e os devora quando chegam perto.
+703|Homem primitivo e teimoso que tem um Item do Milênio.
+704|Guardião da lei que não perdoa trapaças. Ataca com braços em forma de espada.
+705|Dragão maligno com três chifres na cabeça.
+706|Dragão criado da alma de um cavaleiro maligno.
+707|Monge que fez vários rituais no submundo e usa armas e magia.
+708|Rainha que governa todas as estrelas do universo.
+709|Forma retorcida que ataca com braços como tentáculos.
+710|Casco de tartaruga e tesouras de caranguejo dão ataque e defesa altos.
+711|Dragão guerreiro com espada em meia-lua. Dizem que veio da lua.
+712|Dragão que chegou à Terra num cometa vindo dos confins do espaço.
+713|Com a pele ardente de um meteoro, vaporiza tudo que toca.
+714|Garanhão celestial que voa pelos céus com asas escarlates.
+715|Boneca misteriosa cuja dança estranha rouba o poder dos monstros inimigos.
+716|Guerreiro habilidoso que usa seis espadas contra os monstros inimigos.
+717|Tem tesouras letais que cortam quase tudo.
+718|Monstro marinho com um canhão nas costas para mandar os inimigos pelos ares.
+719|Cavaleiro solitário que corre pelo deserto levantando nuvens de poeira.
+720|Distorce a luz e as trevas para criar imagens que confundem os oponentes.
+721|Cerimônia para invocar Magician of Black Chaos. Exige sacrifício.
+722|O mago supremo, com o poder do caos nascido da fusão das Trevas e da Luz.
