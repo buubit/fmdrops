@@ -331,6 +331,8 @@
       if (!u.newer) $('update').innerHTML = '<p class="note">Você já está na versão mais recente (build ' + u.latest + ').</p>';
       else if (u.inApp) $('update').innerHTML = '<p class="note"><b>Build ' + u.latest + ' disponível.</b> Atualiza aqui mesmo, sem baixar APK; os dados importados continuam.</p>' +
         '<button id="btnApply" data-url="' + esc(u.web) + '">Atualizar agora</button>';
+      else if (native && native.installApk) $('update').innerHTML = '<p class="note"><b>Build ' + u.latest + ' disponível.</b> Esta muda a parte Android: o app baixa ' +
+        'para a memória temporária e abre o instalador. É só tocar em Instalar.</p><button id="btnApk" data-url="' + esc(u.apk) + '">Atualizar agora</button>';
       else $('update').innerHTML = '<p class="note"><b>Build ' + u.latest + ' disponível.</b> Esta precisa do APK novo: baixe e abra o arquivo para instalar por cima.</p>' +
         '<a class="btn" href="' + esc(u.apk) + '">Baixar build ' + u.latest + '</a>';
     }).catch(function (e) {
@@ -357,6 +359,16 @@
     patchBox('<p class="error">Não deu certo: ' + esc(msg) + '</p><button id="btnPatch" class="secondary">Tentar de novo</button>');
   };
 
+  window.onApkProgress = function (f) {
+    if ($('update')) $('update').innerHTML = '<progress max="1" value="' + f + '"></progress><p class="meta">Baixando… ' + Math.round(f * 100) + '%</p>';
+  };
+  window.onApkReady = function () {
+    if ($('update')) $('update').innerHTML = '<p class="note">Abrindo o instalador… toque em <b>Instalar</b>. O app fecha e volta atualizado.</p>';
+  };
+  window.onApkError = function (msg) {
+    if ($('update')) $('update').innerHTML = '<p class="error">' + esc(msg) + '</p><button id="btnUpdate" class="secondary">Tentar de novo</button>';
+  };
+
   window.onUpdateError = function (msg) {
     if ($('update')) $('update').innerHTML = '<p class="error">A atualização falhou (' + esc(msg) +
       ').</p><button id="btnUpdate" class="secondary">Tentar de novo</button>';
@@ -376,6 +388,11 @@
     var c = mod.caps;
     var head = '<div class="modcard"><h2>Criar meu mod</h2><p class="meta">Escolha as opções e o app grava um <b>.bin novo</b> para abrir no DuckStation. ' +
       'O jogo base não é alterado; dá para gerar quantas versões quiser.</p>';
+    if (!mod.blob && !mod.error && !mod.triedBase && native && native.baseInfo) {
+      mod.triedBase = true;
+      var bi = native.baseInfo();
+      if (bi) { useSavedBase(JSON.parse(bi)); return; }
+    }
     if (!mod.blob) {
       main.innerHTML = head + '<div class="stack"><button id="btnModPick">Escolher o .bin do jogo</button></div>' +
         (mod.error ? '<p class="error">' + esc(mod.error) + '</p>' : '') +
@@ -400,7 +417,7 @@
     var diffs = [['facil', 'Fácil'], ['normal', 'Normal'], ['dificil', 'Difícil'], ['muito', 'Muito difícil']];
     var presets = [['original', 'Original'], ['drop100', 'Drop 100'], ['facil', 'Fácil demais'], ['desafio', 'Desafio']];
     main.innerHTML = head + '<p class="meta">Base: <b>' + esc(mod.blob.name || 'jogo') + '</b> (' + esc(c.exe) + ') · ' +
-      '<button class="linkbtn" id="btnModPick">trocar</button></p></div>' +
+      '<button class="linkbtn" id="btnModPick">trocar</button>' + (mod.saved ? ' · lembrado neste aparelho' : '') + '</p></div>' +
       '<h3>Atalhos</h3><div class="chips">' + presets.map(function (p) { return '<button data-preset="' + p[0] + '">' + p[1] + '</button>'; }).join('') + '</div>' +
       randomizerCard() +
       '<h3>Opções</h3>' +
@@ -430,6 +447,7 @@
       '<div class="seg">' + diffs.map(function (d) {
         return '<button data-diff="' + d[0] + '" aria-pressed="' + (modOpts.difficulty === d[0]) + '">' + d[1] + '</button>';
       }).join('') + '</div></div>' +
+      tog('keepVersions', 'Guardar uma versão para cada configuração', 'Desligado: o app sempre sobrescreve o mesmo arquivo gerado (economiza espaço). Ligado: cria um arquivo novo por combinação.') +
       (native && native.outputFolder ? '<p class="meta">Pasta dos jogos: <b id="outFolder">' + (esc(native.outputFolder()) || 'escolhida ao gerar') +
         '</b> · <button class="linkbtn" id="btnOutFolder">trocar</button></p>' : '') +
       '<div class="stack patchbox">' + (mod.busy ? '<p class="meta">Gerando…</p>' :
@@ -721,11 +739,30 @@
       '<button class="secondary" id="btnStarterReset">Voltar ao original</button></div>');
   }
 
-  async function modPicked(file) {
-    mod.blob = FM.fromFile(file); mod.caps = null; mod.error = ''; render();
+  function b64bytes(str) { var bin = atob(str), u = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; }
+
+  // Base guardada no aparelho: lida pela casca Android sem precisar escolher o arquivo de novo.
+  function useSavedBase(info) {
+    native.useBase();
+    modPicked({
+      name: info.name, size: info.size,
+      read: function (a, b) {
+        return new Promise(function (ok, fail) {
+          setTimeout(function () {
+            var r = native.readBase(a, b - a);
+            if (!r && b > a) fail(new Error('não consegui ler o jogo guardado; escolha o .bin de novo')); else ok(b64bytes(r));
+          }, 0);
+        });
+      }
+    }, true);
+  }
+
+  async function modPicked(file, saved) {
+    mod.blob = saved ? file : FM.fromFile(file); mod.saved = !!saved; mod.caps = null; mod.error = ''; render();
     try {
       var ed = await FMMod.open(mod.blob);
       mod.caps = ed.caps; mod.ed = ed;
+      if (!saved && native && native.rememberBase) native.rememberBase();
       ['drops', 'starchips', 'lp', 'deckLimit'].forEach(function (k) {
         if (ed.caps[k] == null) modOpts[k] = null; else if (modOpts[k] == null) modOpts[k] = ed.caps[k];
       });
@@ -748,7 +785,7 @@
       var res = await FMMod.buildPatch(ed);
       var base = (mod.blob.name || 'jogo').replace(/\.(bin|BIN)$/, '').replace(/ - FM Drops.*$/, '');
       var tag = [modOpts.drops > 1 ? modOpts.drops + ' cartas' : '', modOpts.difficulty !== 'normal' ? modOpts.difficulty : ''].filter(Boolean).join(' ');
-      var name = base + ' - FM Drops' + (tag ? ' (' + tag + ')' : '') + '.bin';
+      var name = base + ' - FM Drops' + (modOpts.keepVersions && tag ? ' (' + tag + ')' : '') + '.bin';
       mod.busy = false; render();
       patchBox('<p class="meta">' + esc(log.join(' · ')) + '</p>');
       if (native && native.buildImage) native.buildImage(toBase64(res.ppf), name);
@@ -889,6 +926,7 @@
     }
     else if (t.id === 'btnUpdate') checkUpdate();
     else if (t.id === 'btnPatch') { patchBox('<p class="meta">Escolha o .bin do jogo…</p>'); native.applyPatch(); }
+    else if (t.id === 'btnApk') { t.disabled = true; t.textContent = 'Baixando…'; native.installApk(t.dataset.url); }
     else if (t.id === 'btnApply') { t.disabled = true; t.textContent = 'Atualizando…'; native.applyUpdate(t.dataset.url); }
     else if (t.id === 'updBadge') { showSettings(); checkUpdate(); }
     else if (t.dataset.duelist) showDuelist(+t.dataset.duelist, t.dataset.rank);

@@ -11,6 +11,7 @@ import android.provider.OpenableColumns;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.ParcelFileDescriptor;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -93,6 +94,7 @@ public class MainActivity extends Activity {
                 pick.addCategory(Intent.CATEGORY_OPENABLE);
                 pick.setType("*/*");
                 pick.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
                 try {
                     startActivityForResult(pick, PICK_FILE);
                 } catch (Exception e) {
@@ -229,6 +231,101 @@ public class MainActivity extends Activity {
             ui.post(() -> { jobImage = null; askTree(); });
         }
 
+        /** Guarda a última imagem escolhida como base do mod (para não precisar escolher de novo). */
+        @JavascriptInterface
+        public void rememberBase() {
+            if (lastImage == null) return;
+            getSharedPreferences("fm", MODE_PRIVATE).edit().putString("base", lastImage.toString()).apply();
+        }
+
+        /** {"name":..., "size":...} da base guardada, ou "" se não houver/perdeu a permissão. */
+        @JavascriptInterface
+        public String baseInfo() {
+            Uri u = savedBase();
+            if (u == null) return "";
+            try (android.content.res.AssetFileDescriptor fd = getContentResolver().openAssetFileDescriptor(u, "r")) {
+                JSONObject o = new JSONObject();
+                o.put("name", displayName(u));
+                o.put("size", fd.getLength());
+                return o.toString();
+            } catch (Exception e) {
+                return "";
+            }
+        }
+
+        /** Usa a base guardada como imagem de origem para gerar. */
+        @JavascriptInterface
+        public void useBase() { Uri u = savedBase(); if (u != null) lastImage = u; }
+
+        /** Lê `len` bytes da base guardada a partir de `offset` (base64). */
+        @JavascriptInterface
+        public String readBase(double offset, int len) {
+            Uri u = savedBase();
+            if (u == null) return "";
+            try (ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(u, "r");
+                 FileInputStream in = new FileInputStream(pfd.getFileDescriptor())) {
+                java.nio.channels.FileChannel ch = in.getChannel();
+                java.nio.ByteBuffer buf = java.nio.ByteBuffer.allocate(len);
+                long pos = (long) offset;
+                while (buf.hasRemaining()) { int n = ch.read(buf, pos + buf.position()); if (n < 0) break; }
+                return android.util.Base64.encodeToString(buf.array(), 0, buf.position(), android.util.Base64.NO_WRAP);
+            } catch (Exception e) {
+                return "";
+            }
+        }
+
+        /** Baixa o APK novo para o cache do app e abre o instalador (sem passar pelo navegador). */
+        @JavascriptInterface
+        public void installApk(final String address) {
+            new Thread(() -> {
+                try {
+                    if (!address.startsWith(UPDATE_PREFIX)) throw new Exception("endereço inválido");
+                    File apk = new File(getCacheDir(), "update.apk");
+                    HttpURLConnection c = (HttpURLConnection) new URL(address).openConnection();
+                    c.setInstanceFollowRedirects(true);
+                    c.setConnectTimeout(15000);
+                    c.setReadTimeout(30000);
+                    int code = c.getResponseCode();
+                    for (int hop = 0; (code == 301 || code == 302 || code == 303 || code == 307 || code == 308) && hop < 5; hop++) {
+                        String next = c.getHeaderField("Location");
+                        c.disconnect();
+                        c = (HttpURLConnection) new URL(next).openConnection();
+                        code = c.getResponseCode();
+                    }
+                    if (code != 200) throw new Exception("download respondeu " + code);
+                    long total = c.getContentLengthLong(), got = 0, last = 0;
+                    try (InputStream in = c.getInputStream(); FileOutputStream out = new FileOutputStream(apk)) {
+                        byte[] b = new byte[65536];
+                        for (int n; (n = in.read(b)) > 0; ) {
+                            out.write(b, 0, n);
+                            got += n;
+                            long now = System.currentTimeMillis();
+                            if (total > 0 && now - last > 200) { last = now; js("onApkProgress", String.valueOf((double) got / total)); }
+                        }
+                    }
+                    ui.post(this::launchInstaller);
+                } catch (Exception e) {
+                    js("onApkError", JSONObject.quote(String.valueOf(e.getMessage())));
+                }
+            }).start();
+        }
+
+        private void launchInstaller() {
+            if (android.os.Build.VERSION.SDK_INT >= 26 && !getPackageManager().canRequestPackageInstalls()) {
+                js("onApkError", JSONObject.quote("permita \"Instalar apps desconhecidos\" para o FM Drops e toque em Atualizar de novo"));
+                try {
+                    startActivity(new Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                            Uri.parse("package:" + getPackageName())));
+                } catch (Exception ignored) { }
+                return;
+            }
+            Intent i = new Intent(Intent.ACTION_VIEW);
+            i.setDataAndType(Uri.parse("content://" + ApkProvider.AUTHORITY + "/update.apk"), "application/vnd.android.package-archive");
+            i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+            js("onApkReady", "true");
+            startActivity(i);
+        }
+
         @JavascriptInterface
         public void applyUpdate(final String address) {
             new Thread(() -> {
@@ -284,6 +381,16 @@ public class MainActivity extends Activity {
                 js("onPatchError", JSONObject.quote(String.valueOf(e.getMessage())));
             }
         }).start();
+    }
+
+    private Uri savedBase() {
+        String t = getSharedPreferences("fm", MODE_PRIVATE).getString("base", null);
+        if (t == null) return null;
+        Uri u = Uri.parse(t);
+        for (android.content.UriPermission p : getContentResolver().getPersistedUriPermissions()) {
+            if (p.getUri().equals(u) && p.isReadPermission()) return u;
+        }
+        return null;
     }
 
     private Uri savedTree() {
@@ -400,7 +507,10 @@ public class MainActivity extends Activity {
                 uris = new Uri[] { data.getData() };
             }
         }
-        if (uris != null && uris.length == 1) lastImage = uris[0];
+        if (uris != null && uris.length == 1) {
+            lastImage = uris[0];
+            try { getContentResolver().takePersistableUriPermission(lastImage, Intent.FLAG_GRANT_READ_URI_PERMISSION); } catch (Exception ignored) { }
+        }
         pending.onReceiveValue(uris);
         pending = null;
     }
