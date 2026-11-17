@@ -70,7 +70,7 @@
     var n = perDuel();
     return '<p class="legend">' + (n > 1
       ? 'Chance de sair pelo menos uma vez em um duelo com ' + n + ' cartas de drop.'
-      : 'Chance por carta dropada.') + '</p>';
+      : 'Chance por carta dropada.') + (game && !game.faces ? ' Para ver os rostos dos duelistas, importe o jogo de novo em ⚙.' : '') + '</p>';
   }
 
   function index() {
@@ -1023,19 +1023,45 @@
   // Rosto do duelista (1..39). Sem rosto (dados antigos): a inicial do nome.
   function face(id, cls) {
     var d = game && game.duelists[id - 1], name = d ? d.name : '?';
-    if (!facesUrl || !game.faces) return '<span class="face noface ' + (cls || '') + '">' + esc(name.charAt(0)) + '</span>';
+    if (!facesUrl || !game.faces) return '<span class="face noface ' + (cls || '') + '" title="Importe o jogo de novo em ⚙ para ver os rostos">' + esc(name.charAt(0)) + '</span>';
     var f = game.faces, x = (id % f.cols) / (f.cols - 1) * 100, y = Math.floor(id / f.cols) / (f.rows - 1) * 100;
     return '<span class="face ' + (cls || '') + '" style="background-image:url(' + facesUrl + ');background-size:' + f.cols * 100 + '% ' +
       f.rows * 100 + '%;background-position:' + x + '% ' + y + '%" aria-hidden="true"></span>';
   }
 
-  async function importFiles(files) {
+  function savedBaseBlob() {
+    if (!native || !native.baseInfo) return null;
+    var bi = native.baseInfo(); if (!bi) return null;
+    native.useBase();
+    return { name: JSON.parse(bi).name, read: function (a, b) {
+      return new Promise(function (ok, fail) { setTimeout(function () {
+        var r = native.readBase(a, b - a);
+        if (!r && b > a) fail(new Error('não consegui ler o jogo guardado')); else ok(b64bytes(r));
+      }, 0); });
+    } };
+  }
+
+  // Dados antigos sem rostos: lê de novo o jogo guardado no aparelho, em segundo plano.
+  async function upgradeFaces() {
+    if (!game || game.faces) return;
+    var base = savedBaseBlob(); if (!base) return;
+    try {
+      var out = await FM.parse(await FM.openImage(base));
+      if (!out.facesRgba) return;
+      var blob = await toPng(out.rgba, out.game.atlas), fblob = await toPng(out.facesRgba, out.game.faces);
+      await save('game', out.game); await save('atlas', blob); await save('faces', fblob);
+      setGame(out.game, blob, fblob); metaCache = null;
+      if (sheet.hidden) render();
+    } catch (e) { /* fica com as iniciais; dá para importar em ⚙ */ }
+  }
+
+  async function importFiles(files, prepared) {
     if (!sheet.hidden) closeSheet();
     game = null; render();
     var status = $('status');
     status.innerHTML = '<progress id="prog" max="1" value="0"></progress><p class="meta">Lendo o jogo…</p>';
     try {
-      var src = await FM.open(Array.prototype.map.call(files, FM.fromFile));
+      var src = prepared || await FM.open(Array.prototype.map.call(files, FM.fromFile));
       var out = await FM.parse(src, function (p) { $('prog').value = p; });
       var total = out.game.duelists.reduce(function (s, d) { return s + d.pow.length + d.bcd.length + d.tec.length; }, 0);
       if (!total) throw new Error('Não encontrei tabelas de drop nesse arquivo. A versão pode não ser a USA (SLUS-01411).');
@@ -1056,7 +1082,7 @@
   async function boot(silent) {
     try {
       var g = await load('game'), blob = await load('atlas'), fblob = await load('faces');
-      if (g && blob) { setGame(g, blob, fblob); render(); return true; }
+      if (g && blob) { setGame(g, blob, fblob); render(); if (!silent) upgradeFaces(); return true; }
     } catch (e) { /* sem dados salvos */ }
     if (!silent) render();
     return false;
