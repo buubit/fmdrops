@@ -193,3 +193,15 @@ img.art { object-fit: cover; }
 .schip .art { width: 22px; border-radius: 50%; flex: none; }
 .schip > span:not(.art) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px; }
 .schip .ghost { font-size: 12px; padding: 2px 6px; }
+
+/* ---- filtro por tipo e ordenação ---- */
+.types { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 8px; margin: 0 -16px 4px; padding-left: 16px; padding-right: 16px; scrollbar-width: none; }
+.types::-webkit-scrollbar { display: none; }
+.types button { flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; width: 64px; padding: 8px 2px 6px; background: var(--panel); color: var(--muted); border: 1px solid var(--line); border-radius: 14px; font-weight: 500; }
+.types button span { font-size: 22px; line-height: 1; }
+.types button small { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px; }
+.types button[aria-pressed="true"] { background: var(--grad); color: #04202a; border-color: transparent; box-shadow: 0 2px 10px rgba(56, 189, 248, .3); }
+.sortbar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.sortbar .seg { flex: 1; margin: 0; }
+.dirbtn { width: 44px; height: 40px; padding: 0; border-radius: 12px; background: var(--panel2); color: var(--gold); border: 1px solid var(--line); font-size: 18px; }
+.card .pw { position: absolute; right: 0; top: 0; background: rgba(0,0,0,.75); color: var(--gold); font-size: 10px; font-weight: 600; padding: 1px 4px; border-bottom-left-radius: 6px; }

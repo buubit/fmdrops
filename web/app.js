@@ -4,6 +4,14 @@
   var $ = function (id) { return document.getElementById(id); };
   var main = $('main'), sheet = $('sheet'), sheetContent = $('sheetContent');
   var game = null, atlasUrl = '', view = 'cards', query = '', fusFilter = 'all';
+  var TYPE_ICONS = [['🐉', 'Dragão'], ['🧙', 'Mago'], ['🧟', 'Zumbi'], ['⚔️', 'Guerreiro'], ['🦁', 'Besta-Guerreira'], ['🐺', 'Besta'],
+    ['🦅', 'Besta Alada'], ['😈', 'Demônio'], ['🧚', 'Fada'], ['🐛', 'Inseto'], ['🦖', 'Dinossauro'], ['🦎', 'Réptil'], ['🐟', 'Peixe'],
+    ['🐍', 'Serpente Marinha'], ['🤖', 'Máquina'], ['⚡', 'Trovão'], ['💧', 'Aqua'], ['🔥', 'Pyro'], ['⛰️', 'Rocha'], ['🌿', 'Planta'],
+    ['✨', 'Magia'], ['🕳️', 'Armadilha'], ['🔮', 'Ritual'], ['🛡️', 'Equipamento']];
+  var cardFilter = (function () {
+    try { return Object.assign({ type: null, sort: 'id', dir: 1 }, JSON.parse(localStorage.getItem('cardFilter') || '{}')); } catch (e) { return { type: null, sort: 'id', dir: 1 }; }
+  })();
+  function saveFilter() { try { localStorage.setItem('cardFilter', JSON.stringify(cardFilter)); } catch (e) {} }
   var dropsByCard = null, fusionsTo = null, fusionsWith = null;
   var RELEASE_API = 'https://api.github.com/repos/buubit/fmdrops/releases/tags/latest';
   var BUILD = window.APP_BUILD || 0;
@@ -173,9 +181,27 @@
     $('search').hidden = view === 'mod';
     if (view === 'mod') return renderMod();
     if (view === 'cards') {
-      var list = game.cards.filter(match);
-      main.innerHTML = '<p class="count">' + list.length + ' cartas</p><div class="grid">' +
-        list.map(function (c) { return tile(c, !dropsByCard[c.id]); }).join('') + '</div>';
+      var list = game.cards.filter(function (c) { return match(c) && (cardFilter.type == null || c.type === cardFilter.type); });
+      var key = cardFilter.sort, dir = cardFilter.dir;
+      list.sort(function (a, b) {
+        var r = key === 'name' ? a.name.localeCompare(b.name) : key === 'atk' ? a.atk - b.atk : key === 'def' ? a.def - b.def : 0;
+        return (r || a.id - b.id) * dir;
+      });
+      var tname = cardFilter.type == null ? 'Todos os tipos' : TYPE_ICONS[cardFilter.type][1];
+      main.innerHTML = '<div class="types" role="toolbar" aria-label="Filtrar por tipo">' +
+        '<button data-type="all" aria-pressed="' + (cardFilter.type == null) + '" title="Todos"><span>★</span><small>Todos</small></button>' +
+        TYPE_ICONS.map(function (t, i) {
+          return '<button data-type="' + i + '" aria-pressed="' + (cardFilter.type === i) + '" title="' + t[1] + '"><span>' + t[0] + '</span><small>' + t[1] + '</small></button>';
+        }).join('') + '</div>' +
+        '<div class="sortbar"><div class="seg">' + [['id', 'Nº'], ['name', 'Nome'], ['atk', 'ATK'], ['def', 'DEF']].map(function (k) {
+          return '<button data-sort="' + k[0] + '" aria-pressed="' + (key === k[0]) + '">' + k[1] + '</button>';
+        }).join('') + '</div><button class="dirbtn" data-dir="1" aria-label="Inverter ordem">' + (dir === 1 ? '↑' : '↓') + '</button></div>' +
+        '<p class="count">' + list.length + ' cartas · ' + tname + '</p><div class="grid">' +
+        list.map(function (c) {
+          var t = tile(c, !dropsByCard[c.id]);
+          if ((key === 'atk' || key === 'def') && c.monster) t = t.replace('</button>', '<span class="pw">' + c[key] + '</span></button>');
+          return t;
+        }).join('') + '</div>';
     } else if (view === 'fusions') {
       if (!game.fusions || !game.rituals) {
         main.innerHTML = '<p class="note">Para ver esta área, importe o jogo de novo em ⚙ (os dados salvos são de uma versão antiga do app).</p>';
@@ -851,6 +877,13 @@
     else if (t.dataset.quick) { modOpts[t.dataset.quick] = +t.dataset.v; saveModOpts(); render(); }
     else if (t.dataset.diff) { modOpts.difficulty = t.dataset.diff; saveModOpts(); render(); }
     else if (t.dataset.fus) { fusFilter = t.dataset.fus; render(); }
+    else if (t.dataset.type) { cardFilter.type = t.dataset.type === 'all' ? null : +t.dataset.type; saveFilter(); render(); }
+    else if (t.dataset.sort) {
+      if (cardFilter.sort === t.dataset.sort) cardFilter.dir = -cardFilter.dir;
+      else { cardFilter.sort = t.dataset.sort; cardFilter.dir = (t.dataset.sort === 'atk' || t.dataset.sort === 'def') ? -1 : 1; }
+      saveFilter(); render();
+    }
+    else if (t.dataset.dir) { cardFilter.dir = -cardFilter.dir; saveFilter(); render(); }
     else if (t.id === 'btnClear') {
       if (confirm('Apagar as cartas e drops importados?')) clearAll().then(function () { game = null; closeSheet(); render(); });
     }
