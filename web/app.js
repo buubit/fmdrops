@@ -495,13 +495,16 @@
     ['Rochas e Dinossauros', [18, 10]], ['Insetos e Plantas', [9, 19]], ['Bestas Aladas e Trovão', [6, 15]], ['Força bruta (qualquer tipo)', null]];
   // campos pelas descrições: Forest, Wasteland, Mountain, Sogen, Umi, Yami
   var FIELDS = { 330: [4, 9, 19, 5], 331: [2, 10, 18], 332: [0, 6, 15], 333: [3, 4], 334: [16, 15, 12, 13], 335: [1, 7] };
+  // chance mínima por duelo para uma carta entrar num deck pronto (mais tarde dá para farmar mais)
+  var FARM_MIN = { inicio: 0.02, medio: 0.015, late: 0.01 };
   var metaCache = null;
   function metaDecks() {
-    if (metaCache && metaCache.game === game) return metaCache.list;
+    if (metaCache && metaCache.game === game && metaCache.n === perDuel()) return metaCache.list;
     var out = [];
     STAGES.forEach(function (stg) {
       var max = stg[2];
-      var ok = function (id) { var b = bestDrop(id, max); return b && pDuel(b.rate) >= 0.03; };
+      var minP = FARM_MIN[stg[0]];
+      var ok = function (id) { var b = bestDrop(id, max); return b && pDuel(b.rate) >= minP; };
       THEMES.forEach(function (th) {
         var mons = game.cards.filter(function (c) { return c.monster && c.atk > 0 && (!th[1] || th[1].indexOf(c.type) >= 0) && ok(c.id); })
           .sort(function (a, b) { return b.atk - a.atk; });
@@ -526,21 +529,28 @@
         if (deck.length < 30) return;
         var ms = deck.filter(function (id) { return game.cards[id - 1].monster; });
         var avg = Math.round(ms.reduce(function (a, id) { return a + game.cards[id - 1].atk; }, 0) / ms.length);
-        var tier = avg >= 2400 ? 'S' : avg >= 1900 ? 'A' : avg >= 1500 ? 'B' : 'C';
-        out.push({ key: stg[0] + ':' + th[0], name: th[0], stage: stg[0], stageName: stg[1], tier: tier, avg: avg, cards: deck,
+        out.push({ key: stg[0] + ':' + th[0], name: th[0], stage: stg[0], stageName: stg[1], avg: avg, cards: deck, tier: 'C',
           top: monList.slice(0, 3).map(function (c) { return c.id; }) });
       });
     });
+    // tier relativo ao melhor deck temático da mesma fase (ele é sempre S)
+    STAGES.forEach(function (stg) {
+      var ds = out.filter(function (d) { return d.stage === stg[0]; });
+      var themed = ds.filter(function (d) { return d.name.indexOf('Força bruta') < 0; });
+      var best = Math.max.apply(null, (themed.length ? themed : ds).map(function (d) { return d.avg; }).concat([1]));
+      ds.forEach(function (d) { var r = d.avg / best; d.tier = r >= 0.95 ? 'S' : r >= 0.88 ? 'A' : r >= 0.8 ? 'B' : 'C'; });
+    });
     out.sort(function (a, b) { return 'SABC'.indexOf(a.tier) - 'SABC'.indexOf(b.tier) || b.avg - a.avg; });
-    metaCache = { game: game, list: out };
+    metaCache = { game: game, n: perDuel(), list: out };
     return out;
   }
   var metaStage = 'inicio';
   function showMeta() {
     var list = metaDecks().filter(function (d) { return d.stage === metaStage; });
     openSheet('<h2 style="margin:0 36px 4px 0">🏆 Decks prontos</h2><p class="meta">Montados com os dados do <b>seu</b> jogo (funciona com mods e Randomizer): ' +
-      'os monstros mais fortes de cada estilo que dá para farmar na fase escolhida (pelo menos 3% por duelo), mais campo, equipamentos e magias que servem. ' +
-      'Tier pelo ATK médio dos monstros.</p>' +
+      'os monstros mais fortes de cada estilo que dá para farmar na fase escolhida, mais campo, equipamentos e magias que servem. ' +
+      'O tier compara os decks da mesma fase pelo ATK médio dos monstros: o mais forte é S. ' +
+      (perDuel() < 10 ? '<b>Você está com ' + perDuel() + ' carta(s) por duelo em ⚙</b>: cartas raras ficam de fora. Se joga o mod de 100, coloque 100 lá para ver decks bem mais fortes.' : 'Com ' + perDuel() + ' cartas por duelo em ⚙.') + '</p>' +
       '<div class="seg">' + STAGES.map(function (x) { return '<button data-metastage="' + x[0] + '" aria-pressed="' + (metaStage === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>' +
       ['S', 'A', 'B', 'C'].map(function (t) {
         var ds = list.filter(function (d) { return d.tier === t; });
