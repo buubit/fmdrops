@@ -59,6 +59,9 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle state) {
         super.onCreate(state);
         bundle = new File(getFilesDir(), "web");
+        // Limpeza: APK da atualização (já instalado ou abandonado) e sobras de atualização interna.
+        new File(getCacheDir(), "update.apk").delete();
+        delete(new File(getFilesDir(), "web.new"));
         // Um pacote baixado mais antigo que o próprio APK não serve mais.
         if (bundleBuild() <= shellBuild()) delete(bundle);
 
