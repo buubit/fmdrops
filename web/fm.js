@@ -31,6 +31,10 @@
     mrgBcd: 0xB68,
     mrgSaTec: 0x111C,
     mrgCosts: 0xFB9808,
+    mrgFaces: 0xF55000,
+    mrgFaceStride: 0x980,
+    mrgEquips: 0xB85000,
+    mrgEquipsSize: 0x2800,
     mrgFusions: 0xB87800,
     mrgFusionsSize: 0x10000,
     mrgRituals: 0xB97800,
@@ -276,6 +280,15 @@
       var rec = [u16(rz, rp), u16(rz, rp + 2), u16(rz, rp + 4), u16(rz, rp + 6), u16(rz, rp + 8)];
       if (rec.every(function (v) { return v >= 1 && v <= CARDS; })) rituals.push(rec);
     }
+    // Equipamentos: [u16 equipamento][u16 quantos][u16 monstros...] até 0
+    var eq = await src.mrg.read(OFF.mrgEquips, OFF.mrgEquipsSize), equips = {};
+    for (var ep = 0; ep + 4 <= eq.length;) {
+      var eid = u16(eq, ep); if (!eid) break;
+      var en = u16(eq, ep + 2), mons = [];
+      for (var ek = 0; ek < en && ep + 4 + ek * 2 + 2 <= eq.length; ek++) mons.push(u16(eq, ep + 4 + ek * 2));
+      if (eid >= 1 && eid <= CARDS) equips[eid] = mons;
+      ep += 4 + en * 2;
+    }
     progress(0.1);
 
     // Artes: 102x96 em 8 bits + paleta de 256 cores (BGR555), viram um atlas RGBA.
@@ -303,9 +316,21 @@
       progress(0.1 + 0.9 * (start + n) / CARDS);
     }
 
+    // Rostos do Free Duel: 40 x (48x48 índices + CLUT de 64), 0 = Build Deck, 1..39 = duelistas
+    var faces = { width: 10 * 48, height: 4 * 48, cols: 10, rows: 4, cell: 48 }, frgba = new Uint8Array(faces.width * faces.height * 4);
+    var fb = await src.mrg.read(OFF.mrgFaces, 40 * OFF.mrgFaceStride), fok = true;
+    for (var f = 0; f < 40 && fok; f++) {
+      var fo = f * OFF.mrgFaceStride, fx = (f % 10) * 48, fy = Math.floor(f / 10) * 48;
+      for (var fpx = 0; fpx < 2304; fpx++) {
+        var ci = fb[fo + fpx]; if (ci > 63) { fok = false; break; }
+        var fc = u16(fb, fo + 2304 + ci * 2), fd = ((fy + Math.floor(fpx / 48)) * faces.width + fx + fpx % 48) * 4;
+        frgba[fd] = (fc & 31) << 3; frgba[fd + 1] = ((fc >> 5) & 31) << 3; frgba[fd + 2] = ((fc >> 10) & 31) << 3; frgba[fd + 3] = 255;
+      }
+    }
     return {
-      game: { version: 3, source: src.slusName || '', cards: cards, duelists: duelists, fusions: fusions, rituals: rituals, atlas: atlas },
-      rgba: rgba
+      game: { version: 4, source: src.slusName || '', cards: cards, duelists: duelists, fusions: fusions, rituals: rituals, equips: equips,
+        atlas: atlas, faces: fok ? faces : null },
+      rgba: rgba, facesRgba: fok ? frgba : null
     };
   }
 

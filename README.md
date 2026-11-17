@@ -7,6 +7,8 @@ App Android simples e 100% local para consultar **onde cada carta dropa** no
   dropam, em qual rank (S/A POW, B/C/D, S/A TEC) e a chance.
 - Lista de duelistas com tudo que cada um dropa.
 - Aba Fusões só com cartas feitas por fusão ou ritual; combinações repetidas aparecem agrupadas por tipo (ex.: Dragão + Trovão).
+- Aba **Deck**: monte decks (40 cartas, até 3 cópias), marque as que você já tem e veja com quem duelar (e em qual rank) para conseguir as que faltam, por fase do jogo. **Decks prontos** com tier list, gerados com os dados do seu jogo.
+- Rostos dos duelistas (extraídos do menu do Free Duel, `WA_MRG.MRG` `0xF55000`, 40 × 48×48 com CLUT de 64).
 - Aba **Mod**: escolhe o `.bin`, liga/desliga opções (idioma das descrições inglês/português, todos os duelistas no Free Duel, cartas por duelo, starchips, vida inicial, todas as cartas dropáveis, Megamorph em POW, dificuldade) e grava um `.bin` novo para o DuckStation. Mesma lógica de `tools/fmmod.py` (`web/mod.js`, testado com `tools/mod-test.js`).
 - Atualização por dentro do app (⚙ → **Procurar atualização** → **Atualizar agora**), sem reinstalar o APK. O APK só precisa ser baixado de novo quando a casca Android muda (`android/shell-version.txt`).
 - Sem servidor, sem banco, sem internet.

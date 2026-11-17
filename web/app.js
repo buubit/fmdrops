@@ -166,7 +166,7 @@
   function render() {
     $('tools').hidden = !game;
     if (!game && view !== 'mod') return renderEmpty();
-    ['cards', 'fusions', 'duelists', 'mod'].forEach(function (v) {
+    ['cards', 'deck', 'fusions', 'duelists', 'mod'].forEach(function (v) {
       $('tab' + v[0].toUpperCase() + v.slice(1)).setAttribute('aria-selected', view === v);
     });
     $('search').placeholder = view === 'duelists' ? 'Buscar duelista' : 'Buscar carta ou número';
@@ -178,8 +178,9 @@
       return '<button class="card' + (dim ? ' nodrop' : '') + '" data-card="' + c.id +
         '" aria-label="' + esc(c.name) + '">' + art(c.id) + '<span class="num">' + c.id + '</span></button>';
     };
-    $('search').hidden = view === 'mod';
+    $('search').hidden = view === 'mod' || view === 'deck';
     if (view === 'mod') return renderMod();
+    if (view === 'deck') return renderDeck();
     if (view === 'cards') {
       var list = game.cards.filter(function (c) { return match(c) && (cardFilter.type == null || c.type === cardFilter.type); });
       var key = cardFilter.sort, dir = cardFilter.dir;
@@ -222,8 +223,8 @@
       main.innerHTML = '<div class="list">' + game.duelists.filter(function (d) {
         return !q || d.name.toLowerCase().indexOf(q) >= 0;
       }).map(function (d) {
-        return '<button class="item" data-duelist="' + d.id + '"><span class="n">' + d.id +
-          '</span><span class="grow">' + esc(d.name) + '</span></button>';
+        return '<button class="item" data-duelist="' + d.id + '">' + face(d.id) + '<span class="grow">' + esc(d.name) +
+          '<small>#' + d.id + ' · ' + STAGE_OF(d.id) + '</small></span></button>';
       }).join('') + '</div>';
     }
   }
@@ -260,7 +261,7 @@
       (c.desc ? '<p class="desc">' + esc(modOpts.lang === 'pt' && window.FM_LANG_PT ? window.FM_LANG_PT[id - 1] : c.desc.replace(/\n/g, ' ')) + '</p>' : '') +
       '<h3>Onde dropa</h3>' +
       (rows.length ? legend() + rows.map(function (x) {
-        return '<div class="drop"><button class="who" data-duelist="' + x.d.id + '">' + esc(x.d.name) +
+        return '<div class="drop"><button class="who" data-duelist="' + x.d.id + '">' + face(x.d.id, 'sm') + '<span>' + esc(x.d.name) + '</span>' +
           '</button><span class="pills">' + RANKS.map(function (k) {
             return x.r[k[0]] ? '<span class="pill ' + k[0] + '">' + k[1] + ' ' + pct(x.r[k[0]]) + '</span>' : '';
           }).join('') + '</span></div>';
@@ -274,7 +275,7 @@
   function showDuelist(id, rank) {
     var d = game.duelists[id - 1];
     rank = rank || 'pow';
-    openSheet('<h2 style="margin:0 36px 0 0">' + esc(d.name) + '</h2>' +
+    openSheet('<div class="dhead">' + face(id, 'lg') + '<div><h2>' + esc(d.name) + '</h2><p class="meta">#' + id + ' · ' + STAGE_OF(id) + '</p></div></div>' +
       '<div class="seg">' + RANKS.map(function (k) {
         return '<button data-duelist="' + id + '" data-rank="' + k[0] + '" aria-pressed="' + (k[0] === rank) +
           '">' + k[1] + ' (' + d[k[0]].length + ')</button>';
@@ -373,6 +374,193 @@
     if ($('update')) $('update').innerHTML = '<p class="error">A atualização falhou (' + esc(msg) +
       ').</p><button id="btnUpdate" class="secondary">Tentar de novo</button>';
   };
+
+  /* ---------- Deck: montador, plano de farm e decks prontos ---------- */
+
+  var STAGES = [['inicio', 'Início', 8], ['medio', 'Médio', 17], ['late', 'Late game', 39]];
+  function STAGE_OF(id) { return id <= 8 ? 'início' : id <= 17 ? 'médio' : id <= 31 ? 'late' : 'final'; }
+  function stageMax(st) { var s = STAGES.filter(function (x) { return x[0] === st; })[0]; return s ? s[2] : 39; }
+
+  var decks = (function () {
+    try { var d = JSON.parse(localStorage.getItem('decks') || 'null'); if (d && d.list) return d; } catch (e) {}
+    return { list: [{ id: 1, name: 'Meu deck', stage: 'inicio', cards: [], owned: {} }], cur: 1 };
+  })();
+  function saveDecks() { try { localStorage.setItem('decks', JSON.stringify(decks)); } catch (e) {} }
+  function curDeck() { return decks.list.filter(function (d) { return d.id === decks.cur; })[0] || decks.list[0]; }
+  function countOf(dk, id) { return dk.cards.filter(function (x) { return x === id; }).length; }
+
+  function pDuel(rate) { var n = perDuel(); return 1 - Math.pow(1 - rate / 2048, n); }
+  function pctP(p) { p *= 100; return (p >= 99.95 ? '100' : p < 1 ? p.toFixed(1) : Math.round(p)) + '%'; }
+
+  // Melhor fonte de drop de uma carta entre os duelistas 1..max
+  function bestDrop(id, max) {
+    var best = null, src = dropsByCard[id] || {};
+    Object.keys(src).forEach(function (did) {
+      if (+did > max) return;
+      RANKS.forEach(function (k) {
+        var r = src[did][k[0]];
+        if (r && (!best || r > best.rate)) best = { duelist: +did, pool: k[0], rate: r };
+      });
+    });
+    return best;
+  }
+
+  function deckStats(dk) {
+    var mons = 0, atk = 0, kinds = { m: 0, magia: 0, eq: 0, arm: 0, rit: 0 };
+    dk.cards.forEach(function (id) {
+      var c = game.cards[id - 1];
+      if (c.monster) { mons++; atk += c.atk; kinds.m++; }
+      else if (c.type === 23) kinds.eq++; else if (c.type === 21) kinds.arm++; else if (c.type === 22) kinds.rit++; else kinds.magia++;
+    });
+    return { avg: mons ? Math.round(atk / mons) : 0, kinds: kinds };
+  }
+
+  function farmPlan(dk) {
+    var max = stageMax(dk.stage), groups = {}, other = [];
+    var uniq = dk.cards.filter(function (x, i, a) { return a.indexOf(x) === i; });
+    uniq.forEach(function (id) {
+      var need = countOf(dk, id) - (dk.owned[id] || 0);
+      if (need <= 0) return;
+      var b = bestDrop(id, max);
+      if (b) {
+        var key = b.duelist + ':' + b.pool;
+        (groups[key] || (groups[key] = { duelist: b.duelist, pool: b.pool, cards: [] })).cards.push({ id: id, need: need, p: pDuel(b.rate) });
+        return;
+      }
+      var later = bestDrop(id, 39), c = game.cards[id - 1];
+      var how = later ? 'mais tarde: ' + game.duelists[later.duelist - 1].name + ' (' + STAGE_OF(later.duelist) + ')' :
+        (fusionsTo[id] ? 'só por fusão (' + fusionsTo[id].length + ' combinações)' :
+          ((game.rituals || []).some(function (r) { return r[4] === id; }) ? 'só por ritual' :
+            (c.password ? 'senha ' + c.password + (c.cost < 999999 ? ' · ' + c.cost + ' ★' : '') : 'não dropa de ninguém')));
+      other.push({ id: id, need: need, how: how });
+    });
+    var list = Object.keys(groups).map(function (k) { return groups[k]; });
+    list.forEach(function (g) { g.score = g.cards.reduce(function (a, x) { return a + x.p; }, 0); });
+    list.sort(function (a, b) { return b.cards.length - a.cards.length || b.score - a.score; });
+    return { groups: list, other: other };
+  }
+
+  function renderDeck() {
+    if (!game) return renderEmpty();
+    var dk = curDeck(), st = deckStats(dk), plan = farmPlan(dk);
+    var uniq = dk.cards.filter(function (x, i, a) { return a.indexOf(x) === i; }).sort(function (a, b) {
+      return game.cards[b - 1].atk - game.cards[a - 1].atk || a - b; });
+    var have = dk.cards.length ? uniq.reduce(function (a, id) { return a + Math.min(dk.owned[id] || 0, countOf(dk, id)); }, 0) : 0;
+    var POOLN = { pow: 'S/A POW', bcd: 'B/C/D', tec: 'S/A TEC' };
+    main.innerHTML =
+      '<div class="chips deckchips">' + decks.list.map(function (d) {
+        return '<button data-deck="' + d.id + '" aria-pressed="' + (d.id === dk.id) + '">' + esc(d.name) + '</button>';
+      }).join('') + '<button id="btnNewDeck">+ Novo</button></div>' +
+      '<div class="deckhead"><div><h2>' + esc(dk.name) + '</h2><p class="meta">' + dk.cards.length + '/40 cartas · ATK médio ' + st.avg +
+      ' · tenho ' + have + '/' + dk.cards.length + '</p></div><button class="round" id="btnDeckMenu" aria-label="Opções do deck">⋯</button></div>' +
+      '<div class="seg">' + STAGES.map(function (x) {
+        return '<button data-stage="' + x[0] + '" aria-pressed="' + (dk.stage === x[0]) + '">' + x[1] + '</button>';
+      }).join('') + '</div><p class="legend">Fase do jogo: o plano de farm usa só duelistas até ' + game.duelists[stageMax(dk.stage) - 1].name + '.</p>' +
+      '<div class="kinds"><span>👾 ' + st.kinds.m + '</span><span>✨ ' + st.kinds.magia + '</span><span>🛡️ ' + st.kinds.eq + '</span><span>🕳️ ' + st.kinds.arm + '</span>' +
+      (st.kinds.rit ? '<span>🔮 ' + st.kinds.rit + '</span>' : '') + '</div>' +
+      '<div class="stack row2"><button id="btnAddCards">+ Adicionar cartas</button><button class="secondary" id="btnMeta">🏆 Decks prontos</button></div>' +
+      (uniq.length ? '<p class="legend">Toque na carta para marcar quantas você já tem. "−" tira uma cópia do deck.</p><div class="grid deckgrid">' + uniq.map(function (id) {
+        var n = countOf(dk, id), o = Math.min(dk.owned[id] || 0, n);
+        return '<div class="dcard' + (o >= n ? ' owned' : '') + '"><button class="card" data-own="' + id + '" aria-label="' + esc(game.cards[id - 1].name) + '">' + art(id) +
+          '<span class="num">' + o + '/' + n + '</span>' + (o >= n ? '<span class="ok">✓</span>' : '') + '</button>' +
+          '<button class="minus" data-rm="' + id + '" aria-label="Tirar uma cópia">−</button></div>';
+      }).join('') + '</div>' : '<p class="note">Deck vazio. Adicione cartas ou escolha um dos decks prontos.</p>') +
+      (plan.groups.length || plan.other.length ? '<h3>Com quem duelar</h3><p class="legend">Para as cartas que faltam. Chance por duelo com ' + perDuel() +
+        ' carta(s) por vitória (ajuste em ⚙). Vença no rank indicado.</p>' +
+        plan.groups.map(function (g) {
+          return '<div class="farm"><button class="farmhead" data-duelist="' + g.duelist + '">' + face(g.duelist) + '<span class="grow"><b>' +
+            esc(game.duelists[g.duelist - 1].name) + '</b><small>vença com <span class="pill ' + g.pool + '">' + POOLN[g.pool] + '</span> · ' +
+            g.cards.length + ' carta(s)</small></span></button><div class="farmcards">' + g.cards.map(function (x) {
+              return '<button class="fc" data-card="' + x.id + '">' + art(x.id) + '<span>' + esc(game.cards[x.id - 1].name) + '<small>' + pctP(x.p) +
+                ' por duelo' + (x.need > 1 ? ' · faltam ' + x.need : '') + '</small></span></button>';
+            }).join('') + '</div></div>';
+        }).join('') +
+        (plan.other.length ? '<h3>Outras formas</h3>' + plan.other.map(function (x) {
+          return '<button class="item" data-card="' + x.id + '">' + art(x.id) + '<span class="grow">' + esc(game.cards[x.id - 1].name) + '<small>' + esc(x.how) + '</small></span></button>';
+        }).join('') : '') : (dk.cards.length ? '<p class="note">Você já tem todas as cartas deste deck. 🎉</p>' : ''));
+  }
+
+  function addToDeck(id) {
+    var dk = curDeck(), lim = 3;
+    if (dk.cards.length >= 40) return 'O deck já tem 40 cartas.';
+    if (countOf(dk, id) >= lim) return 'Máximo de ' + lim + ' cópias.';
+    dk.cards.push(id); saveDecks();
+    return 'Adicionada: ' + game.cards[id - 1].name + ' (' + countOf(dk, id) + ' no deck, ' + dk.cards.length + '/40)';
+  }
+
+  // ---- decks prontos (gerados a partir dos dados do seu jogo)
+  var THEMES = [
+    ['Dragões', [0]], ['Dragão + Trovão', [0, 15]], ['Máquinas', [14]], ['Feras e Guerreiros-Fera', [4, 5]],
+    ['Zumbis e Demônios', [2, 7]], ['Água (Aqua, Peixe, Serpente)', [16, 12, 13]], ['Magos e Fadas', [1, 8]], ['Guerreiros', [3]],
+    ['Rochas e Dinossauros', [18, 10]], ['Insetos e Plantas', [9, 19]], ['Bestas Aladas e Trovão', [6, 15]], ['Força bruta (qualquer tipo)', null]];
+  // campos pelas descrições: Forest, Wasteland, Mountain, Sogen, Umi, Yami
+  var FIELDS = { 330: [4, 9, 19, 5], 331: [2, 10, 18], 332: [0, 6, 15], 333: [3, 4], 334: [16, 15, 12, 13], 335: [1, 7] };
+  var metaCache = null;
+  function metaDecks() {
+    if (metaCache && metaCache.game === game) return metaCache.list;
+    var out = [];
+    STAGES.forEach(function (stg) {
+      var max = stg[2];
+      var ok = function (id) { var b = bestDrop(id, max); return b && pDuel(b.rate) >= 0.03; };
+      THEMES.forEach(function (th) {
+        var mons = game.cards.filter(function (c) { return c.monster && c.atk > 0 && (!th[1] || th[1].indexOf(c.type) >= 0) && ok(c.id); })
+          .sort(function (a, b) { return b.atk - a.atk; });
+        if (mons.length < 10) return;
+        var deck = [], add = function (id, n) { for (var i = 0; i < n && deck.length < 40; i++) deck.push(id); };
+        var monList = mons.slice(0, 12);
+        monList.forEach(function (c, i) { add(c.id, i < 6 ? 3 : 2); });
+        while (deck.length > 28) deck.pop();
+        var support = [];
+        Object.keys(FIELDS).forEach(function (f) {
+          if (th[1] && FIELDS[f].some(function (t) { return th[1].indexOf(t) >= 0; }) && ok(+f)) support.push([+f, 2]);
+        });
+        if (ok(657)) support.push([657, 2]);
+        var inDeck = deck.filter(function (x, i, a) { return a.indexOf(x) === i; });
+        var eqs = Object.keys(game.equips || {}).map(Number).filter(function (e) { return e !== 657 && ok(e); }).map(function (e) {
+          return [e, inDeck.filter(function (m) { return game.equips[e].indexOf(m) >= 0; }).length];
+        }).filter(function (x) { return x[1] >= 3; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 2);
+        eqs.forEach(function (e) { support.push([e[0], 2]); });
+        [337, 336, 348].forEach(function (m) { if (ok(m)) support.push([m, 1]); });
+        support.forEach(function (x) { add(x[0], x[1]); });
+        for (var i = 12; deck.length < 40 && i < mons.length; i++) add(mons[i].id, 2);
+        if (deck.length < 30) return;
+        var ms = deck.filter(function (id) { return game.cards[id - 1].monster; });
+        var avg = Math.round(ms.reduce(function (a, id) { return a + game.cards[id - 1].atk; }, 0) / ms.length);
+        var tier = avg >= 2400 ? 'S' : avg >= 1900 ? 'A' : avg >= 1500 ? 'B' : 'C';
+        out.push({ key: stg[0] + ':' + th[0], name: th[0], stage: stg[0], stageName: stg[1], tier: tier, avg: avg, cards: deck,
+          top: monList.slice(0, 3).map(function (c) { return c.id; }) });
+      });
+    });
+    out.sort(function (a, b) { return 'SABC'.indexOf(a.tier) - 'SABC'.indexOf(b.tier) || b.avg - a.avg; });
+    metaCache = { game: game, list: out };
+    return out;
+  }
+  var metaStage = 'inicio';
+  function showMeta() {
+    var list = metaDecks().filter(function (d) { return d.stage === metaStage; });
+    openSheet('<h2 style="margin:0 36px 4px 0">🏆 Decks prontos</h2><p class="meta">Montados com os dados do <b>seu</b> jogo (funciona com mods e Randomizer): ' +
+      'os monstros mais fortes de cada estilo que dá para farmar na fase escolhida (pelo menos 3% por duelo), mais campo, equipamentos e magias que servem. ' +
+      'Tier pelo ATK médio dos monstros.</p>' +
+      '<div class="seg">' + STAGES.map(function (x) { return '<button data-metastage="' + x[0] + '" aria-pressed="' + (metaStage === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+      ['S', 'A', 'B', 'C'].map(function (t) {
+        var ds = list.filter(function (d) { return d.tier === t; });
+        if (!ds.length) return '';
+        return '<div class="tierrow"><span class="tier t' + t + '">' + t + '</span><div class="tierdecks">' + ds.map(function (d) {
+          return '<button class="metadeck" data-meta="' + esc(d.key) + '"><span class="tops">' + d.top.map(function (id) { return art(id); }).join('') +
+            '</span><b>' + esc(d.name) + '</b><small>ATK médio ' + d.avg + '</small></button>';
+        }).join('') + '</div></div>';
+      }).join('') || '<p class="note">Nenhum deck possível nessa fase com as cartas disponíveis.</p>');
+  }
+  function showMetaDeck(key) {
+    var d = metaDecks().filter(function (x) { return x.key === key; })[0]; if (!d) return;
+    var uniq = d.cards.filter(function (x, i, a) { return a.indexOf(x) === i; });
+    openSheet('<h2 style="margin:0 36px 4px 0"><span class="tier t' + d.tier + ' inl">' + d.tier + '</span> ' + esc(d.name) + '</h2><p class="meta">' + d.stageName + ' · ' +
+      d.cards.length + ' cartas · ATK médio ' + d.avg + '</p><div class="grid">' + uniq.map(function (id) {
+        var n = d.cards.filter(function (x) { return x === id; }).length;
+        return '<button class="card" data-card="' + id + '">' + art(id) + '<span class="num">×' + n + '</span></button>';
+      }).join('') + '</div><div class="stack" style="margin-top:12px"><button data-usemeta="' + esc(key) + '">Usar este deck</button>' +
+      '<button class="secondary" id="btnMeta">Voltar</button></div>');
+  }
 
   /* ---------- Mod ("GameShark") ---------- */
 
@@ -812,11 +1000,23 @@
     });
   }
 
-  function setGame(g, blob) {
+  var facesUrl = '';
+  function setGame(g, blob, faceBlob) {
     game = g;
     if (atlasUrl) URL.revokeObjectURL(atlasUrl);
     atlasUrl = URL.createObjectURL(blob);
+    if (facesUrl) URL.revokeObjectURL(facesUrl);
+    facesUrl = faceBlob && g.faces ? URL.createObjectURL(faceBlob) : '';
     index();
+  }
+
+  // Rosto do duelista (1..39). Sem rosto (dados antigos): a inicial do nome.
+  function face(id, cls) {
+    var d = game && game.duelists[id - 1], name = d ? d.name : '?';
+    if (!facesUrl || !game.faces) return '<span class="face noface ' + (cls || '') + '">' + esc(name.charAt(0)) + '</span>';
+    var f = game.faces, x = (id % f.cols) / (f.cols - 1) * 100, y = Math.floor(id / f.cols) / (f.rows - 1) * 100;
+    return '<span class="face ' + (cls || '') + '" style="background-image:url(' + facesUrl + ');background-size:' + f.cols * 100 + '% ' +
+      f.rows * 100 + '%;background-position:' + x + '% ' + y + '%" aria-hidden="true"></span>';
   }
 
   async function importFiles(files) {
@@ -830,9 +1030,11 @@
       var total = out.game.duelists.reduce(function (s, d) { return s + d.pow.length + d.bcd.length + d.tec.length; }, 0);
       if (!total) throw new Error('Não encontrei tabelas de drop nesse arquivo. A versão pode não ser a USA (SLUS-01411).');
       var blob = await toPng(out.rgba, out.game.atlas);
+      var fblob = out.facesRgba ? await toPng(out.facesRgba, out.game.faces) : null;
       await save('game', out.game);
       await save('atlas', blob);
-      setGame(out.game, blob);
+      await save('faces', fblob);
+      setGame(out.game, blob, fblob);
       render();
     } catch (e) {
       var saved = await boot(true);
@@ -843,8 +1045,8 @@
 
   async function boot(silent) {
     try {
-      var g = await load('game'), blob = await load('atlas');
-      if (g && blob) { setGame(g, blob); render(); return true; }
+      var g = await load('game'), blob = await load('atlas'), fblob = await load('faces');
+      if (g && blob) { setGame(g, blob, fblob); render(); return true; }
     } catch (e) { /* sem dados salvos */ }
     if (!silent) render();
     return false;
@@ -858,7 +1060,7 @@
     if (t.id === 'btnImport') { $('file').value = ''; $('file').click(); }
     else if (t.id === 'btnSettings') showSettings();
     else if (t.id === 'sheetClose') closeSheet();
-    else if (/^tab(Cards|Fusions|Duelists|Mod)$/.test(t.id)) { view = t.id.slice(3).toLowerCase(); window.scrollTo(0, 0); render(); }
+    else if (/^tab(Cards|Deck|Fusions|Duelists|Mod)$/.test(t.id)) { view = t.id.slice(3).toLowerCase(); window.scrollTo(0, 0); render(); }
     else if (t.id === 'btnModPick') { $('modFile').value = ''; $('modFile').click(); }
     else if (t.id === 'btnModBuild') modBuild();
     else if (t.id === 'btnOutFolder') native.chooseOutputFolder();
@@ -914,6 +1116,41 @@
     else if (t.dataset.quick) { modOpts[t.dataset.quick] = +t.dataset.v; saveModOpts(); render(); }
     else if (t.dataset.diff) { modOpts.difficulty = t.dataset.diff; saveModOpts(); render(); }
     else if (t.dataset.fus) { fusFilter = t.dataset.fus; render(); }
+    else if (t.dataset.deck) { decks.cur = +t.dataset.deck; saveDecks(); render(); }
+    else if (t.id === 'btnNewDeck') {
+      var nm = prompt('Nome do deck:', 'Deck ' + (decks.list.length + 1)); if (nm) {
+        var nid = decks.list.reduce(function (a, d) { return Math.max(a, d.id); }, 0) + 1;
+        decks.list.push({ id: nid, name: nm.slice(0, 30), stage: curDeck().stage, cards: [], owned: {} }); decks.cur = nid; saveDecks(); render(); }
+    }
+    else if (t.id === 'btnDeckMenu') {
+      var dk0 = curDeck(), act = prompt('Digite: 1 = renomear, 2 = apagar, 3 = esvaziar, 4 = marcar tudo como "tenho"', '');
+      if (act === '1') { var nn = prompt('Novo nome:', dk0.name); if (nn) dk0.name = nn.slice(0, 30); }
+      else if (act === '2' && confirm('Apagar o deck "' + dk0.name + '"?')) { decks.list = decks.list.filter(function (d) { return d !== dk0; });
+        if (!decks.list.length) decks.list.push({ id: 1, name: 'Meu deck', stage: 'inicio', cards: [], owned: {} }); decks.cur = decks.list[0].id; }
+      else if (act === '3' && confirm('Tirar todas as cartas?')) { dk0.cards = []; dk0.owned = {}; }
+      else if (act === '4') dk0.cards.forEach(function (id) { dk0.owned[id] = countOf(dk0, id); });
+      saveDecks(); render();
+    }
+    else if (t.dataset.stage) { curDeck().stage = t.dataset.stage; saveDecks(); render(); }
+    else if (t.dataset.own) { var dk1 = curDeck(), oid = +t.dataset.own, nmax = countOf(dk1, oid); dk1.owned[oid] = ((dk1.owned[oid] || 0) + 1) % (nmax + 1); saveDecks(); render(); }
+    else if (t.dataset.rm) { var dk2 = curDeck(), rid = +t.dataset.rm, ix = dk2.cards.lastIndexOf(rid); if (ix >= 0) dk2.cards.splice(ix, 1);
+      if ((dk2.owned[rid] || 0) > countOf(dk2, rid)) dk2.owned[rid] = countOf(dk2, rid); saveDecks(); render(); }
+    else if (t.id === 'btnAddCards') {
+      var again = function (msg) {
+        openPicker('Adicionar ao deck', function (id) { var m2 = addToDeck(id); render(); again(m2); });
+        if (msg) { var bar = document.createElement('p'); bar.className = 'toastline'; bar.textContent = msg; $('pickList').parentNode.insertBefore(bar, $('pickList')); }
+      };
+      again('');
+    }
+    else if (t.id === 'btnMeta') showMeta();
+    else if (t.dataset.metastage) { metaStage = t.dataset.metastage; showMeta(); }
+    else if (t.dataset.meta) showMetaDeck(t.dataset.meta);
+    else if (t.dataset.usemeta) {
+      var md = metaDecks().filter(function (x) { return x.key === t.dataset.usemeta; })[0];
+      var nid2 = decks.list.reduce(function (a, d) { return Math.max(a, d.id); }, 0) + 1;
+      decks.list.push({ id: nid2, name: md.name + ' (' + md.stageName + ')', stage: md.stage, cards: md.cards.slice(), owned: {} });
+      decks.cur = nid2; saveDecks(); closeSheet(); view = 'deck'; render();
+    }
     else if (t.dataset.type) { cardFilter.type = t.dataset.type === 'all' ? null : +t.dataset.type; saveFilter(); render(); }
     else if (t.dataset.sort) {
       if (cardFilter.sort === t.dataset.sort) cardFilter.dir = -cardFilter.dir;
