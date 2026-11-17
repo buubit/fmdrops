@@ -368,8 +368,9 @@ public class MainActivity extends Activity {
             String mod = displayName(uri).replaceAll("\\.(ppf|PPF)$", "");
             startOutput(patchImage, patchPpf, (mod.equals(base) ? base + " (mod)" : base + " - " + mod) + ".bin");
         } else if (request == TREE_OUT) {
-            getContentResolver().takePersistableUriPermission(uri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            int flags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            getContentResolver().takePersistableUriPermission(uri, flags != 0 ? flags
+                    : Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
             getSharedPreferences("fm", MODE_PRIVATE).edit().putString("outTree", uri.toString()).apply();
             js("onOutputFolder", JSONObject.quote(treeLabel(uri)));
             if (jobImage != null) startOutput(jobImage, jobPpf, jobName);
@@ -380,7 +381,14 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onActivityResult(int request, int result, Intent data) {
-        if (request >= PATCH_IMAGE && request <= BUILD_OUT) { onPatchResult(request, result, data); return; }
+        if (request >= PATCH_IMAGE && request <= TREE_OUT) {
+            try {
+                onPatchResult(request, result, data);
+            } catch (Exception e) {
+                js("onPatchError", JSONObject.quote(String.valueOf(e.getMessage())));
+            }
+            return;
+        }
         if (request != PICK_FILE || pending == null) return;
         Uri[] uris = null;
         if (result == RESULT_OK && data != null) {
