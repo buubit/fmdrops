@@ -339,7 +339,7 @@
   /* ---------- Mod ("GameShark") ---------- */
 
   var mod = { blob: null, caps: null, ed: null, error: '', busy: false };
-  var MOD_DEFAULT = { cards: {}, rituals: {}, randomizer: { on: false, seed: 1, decks: false }, dropPool: 'rank', deckLimit: 3, terrain: 'normal', priceDiv: 1, buyAll: false,
+  var MOD_DEFAULT = { cards: {}, rituals: {}, custom: [], starter: null, randomizer: { on: false, seed: 1, decks: false }, dropPool: 'rank', deckLimit: 3, terrain: 'normal', priceDiv: 1, buyAll: false,
     freeDuel: true, drops: 100, starchips: 0, lp: 8000, allDrops: true, megamorph: true, difficulty: 'normal' };
   var modOpts = (function () {
     try { return Object.assign({}, MOD_DEFAULT, JSON.parse(localStorage.getItem('modOpts') || '{}')); } catch (e) { return Object.assign({}, MOD_DEFAULT); }
@@ -394,7 +394,10 @@
       tog('buyAll', 'Vender as cartas "proibidas"', 'Cartas com senha mas preço 999999 (Blue-eyes, Exodia…) passam a custar 99999 antes do desconto') +
       '<h3>Editores</h3><div class="stack">' +
       '<button class="secondary" id="btnEditCards">Editar cartas' + countTag(modOpts.cards) + '</button>' +
-      '<button class="secondary" id="btnEditRituals">Editar rituais' + countTag(modOpts.rituals) + '</button></div>' +
+      '<button class="secondary" id="btnEditRituals">Editar rituais' + countTag(modOpts.rituals) + '</button>' +
+      '<button class="secondary" id="btnCustom">Faça você mesmo: cartas com sua imagem' + countTag(modOpts.custom) + '</button>' +
+      (mod.ed && mod.ed.starter ? '<button class="secondary" id="btnStarter">Deck inicial' + (modOpts.starter ? ' <span class="badge">personalizado</span>' : '') + '</button>' : '') +
+      '</div>' +
       '<div class="opt"><span><b>Dificuldade dos decks</b><small>Difícil: os duelistas puxam mais os monstros fortes que já têm. Fácil: o contrário.</small></span>' +
       '<div class="seg">' + diffs.map(function (d) {
         return '<button data-diff="' + d[0] + '" aria-pressed="' + (modOpts.difficulty === d[0]) + '">' + d[1] + '</button>';
@@ -506,6 +509,188 @@
           slot(i, 0, r[0], 'Carta de ritual') + '<div class="rtrib">' + slot(i, 1, r[1], 'Sacrifício') + slot(i, 2, r[2], 'Sacrifício') + slot(i, 3, r[3], 'Sacrifício') + '</div>' +
           slot(i, 4, r[4], 'Invoca') + '</div>';
       }).join(''));
+  }
+
+  // ---------- Faça você mesmo (carta com imagem própria) ----------
+  var draft = null;
+
+  function quantize(rgba, n) {
+    var px = [];
+    for (var i = 0; i < rgba.length; i += 4) px.push([rgba[i], rgba[i + 1], rgba[i + 2]]);
+    var boxes = [px.slice()];
+    while (boxes.length < n) {
+      var bi = -1, best = -1, ch = 0;
+      boxes.forEach(function (b, k) {
+        if (b.length < 2) return;
+        for (var c = 0; c < 3; c++) {
+          var mn = 255, mx = 0;
+          b.forEach(function (p) { if (p[c] < mn) mn = p[c]; if (p[c] > mx) mx = p[c]; });
+          if (mx - mn > best) { best = mx - mn; bi = k; ch = c; }
+        }
+      });
+      if (bi < 0 || best <= 0) break;
+      var b = boxes[bi].sort(function (x, y) { return x[ch] - y[ch]; }), mid = b.length >> 1;
+      boxes.splice(bi, 1, b.slice(0, mid), b.slice(mid));
+    }
+    var pal = boxes.map(function (b) {
+      var r = 0, g = 0, bl = 0; b.forEach(function (p) { r += p[0]; g += p[1]; bl += p[2]; });
+      return [r / b.length, g / b.length, bl / b.length];
+    });
+    while (pal.length < n) pal.push([0, 0, 0]);
+    var idx = new Uint8Array(px.length);
+    px.forEach(function (p, i) {
+      var bd = 1e9, bk = 0;
+      for (var k = 0; k < pal.length; k++) {
+        var dr = p[0] - pal[k][0], dg = p[1] - pal[k][1], db = p[2] - pal[k][2], d = dr * dr + dg * dg + db * db;
+        if (d < bd) { bd = d; bk = k; }
+      }
+      idx[i] = bk;
+    });
+    var clut = new Uint8Array(n * 2);
+    pal.forEach(function (c, k) {
+      var v = (Math.round(c[0]) >> 3) | ((Math.round(c[1]) >> 3) << 5) | ((Math.round(c[2]) >> 3) << 10);
+      if (v === 0) v = 0x0421; // 0x0000 é transparente no PlayStation
+      clut[k * 2] = v & 255; clut[k * 2 + 1] = v >> 8;
+    });
+    return { idx: idx, clut: clut };
+  }
+
+  function drawCover(img, w, h) {
+    var cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+    var ctx = cv.getContext('2d'), r = Math.max(w / img.width, h / img.height);
+    var sw = w / r, sh = h / r;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, 0, 0, w, h);
+    return { cv: cv, data: ctx.getImageData(0, 0, w, h).data };
+  }
+
+  function packArt(img) {
+    var big = drawCover(img, 102, 96), small = drawCover(img, 40, 32);
+    var a = quantize(big.data, 256), t = quantize(small.data, 64);
+    var art = new Uint8Array(0x2640 + 0x200); art.set(a.idx, 0); art.set(a.clut, 0x2640);
+    var th = new Uint8Array(0x500 + 0x80); th.set(t.idx, 0); th.set(t.clut, 0x500);
+    return { art: toBase64(art), thumb: toBase64(th), preview: big.cv.toDataURL() };
+  }
+
+  function packTitle(name) {
+    var cv = document.createElement('canvas'); cv.width = 96; cv.height = 14;
+    var ctx = cv.getContext('2d'), size = 11;
+    ctx.font = 'bold ' + size + 'px Georgia, serif';
+    while (ctx.measureText(name).width > 92 && size > 7) { size--; ctx.font = 'bold ' + size + 'px Georgia, serif'; }
+    ctx.fillStyle = '#fff'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(name, 3, 11);
+    var d = ctx.getImageData(0, 0, 96, 14).data, out = new Uint8Array(0x2A0);
+    for (var i = 0; i < 96 * 14; i += 2) {
+      var a = Math.round(d[i * 4 + 3] / 255 * 7), b = Math.round(d[(i + 1) * 4 + 3] / 255 * 7);
+      out[i >> 1] = a | (b << 4);
+    }
+    return toBase64(out);
+  }
+
+  function showCustomList() {
+    picker = null;
+    var list = modOpts.custom || [];
+    openSheet('<h2 style="margin:0 36px 4px 0">Faça você mesmo</h2><p class="meta">Escolha uma imagem (foto sua, desenho, o que quiser), dê nome e atributos, ' +
+      'e ela entra no jogo no lugar de uma carta existente, dropando de quem você escolher.</p>' +
+      '<button id="btnNewCustom">Criar carta nova</button>' +
+      (list.length ? '<h3>Minhas cartas</h3><div class="list">' + list.map(function (cc, i) {
+        return '<button class="item" data-custom="' + i + '"><img class="art" src="' + (cc.preview || '') + '" alt=""><span class="grow">' + esc(cc.name || 'Sem nome') +
+          '<small>no lugar de #' + cc.slot + ' ' + esc(cardName(cc.slot)) + ' · ' + cc.atk + '/' + cc.def + '</small></span></button>';
+      }).join('') + '</div>' : ''));
+  }
+
+  function editCustom(i) {
+    var cc = i == null ? null : modOpts.custom[i];
+    draft = cc ? JSON.parse(JSON.stringify(cc)) : { slot: 0, name: '', desc: '', atk: 2000, def: 1500, level: 5, type: 0, attr: 0, gs1: 1, gs2: 5, drops: [] };
+    draft.index = i;
+    renderDraft();
+  }
+
+  function renderDraft() {
+    picker = null;
+    var d = draft, room = d.slot ? FMMod.nameRoom(mod.ed, d.slot) : 0, droom = d.slot ? FMMod.descRoom(mod.ed, d.slot) : 0;
+    var sel = function (f, names) {
+      return '<select data-df="' + f + '">' + names.map(function (n, i) { return '<option value="' + i + '"' + (i === d[f] ? ' selected' : '') + '>' + esc(n) + '</option>'; }).join('') + '</select>';
+    };
+    var numF = function (f, label, max, step) {
+      return '<label class="cf"><span>' + label + '</span><input type="number" inputmode="numeric" data-df="' + f + '" min="0" max="' + max + '" step="' + step + '" value="' + d[f] + '"></label>';
+    };
+    var duels = mod.ed.duelistNames;
+    openSheet('<h2 style="margin:0 36px 8px 0">' + (d.index == null ? 'Nova carta' : 'Editar carta') + '</h2>' +
+      '<div class="dimg"><button class="dpick" id="btnImg">' + (d.preview ? '<img src="' + d.preview + '" alt="">' : '<span>Toque para escolher a imagem</span>') + '</button>' +
+      '<small class="meta">Vira 102×96 com 256 cores (a miniatura 40×32 é feita junto). Fica no formato da carta: corte central.</small></div>' +
+      '<h3>No lugar de qual carta?</h3>' +
+      (d.slot ? cardRow(d.slot, 'id="btnSlot"', 'toque para trocar') : '<button class="secondary" id="btnSlot">Escolher a carta que será substituída</button>') +
+      '<p class="meta">Dica: escolha uma carta que você não usa. Ela some do jogo e a sua entra no lugar (mesmo número, fusões e senha dela).</p>' +
+      '<h3>Dados</h3><div class="cfgrid">' +
+      '<label class="cf full"><span>Nome' + (d.slot ? ' (até ' + room + ' letras, sem acento)' : '') + '</span><input type="text" data-df="name" maxlength="' + (room || 40) + '" value="' + esc(d.name) + '"></label>' +
+      '<label class="cf full"><span>Descrição' + (d.slot ? ' (até ' + droom + ' letras)' : '') + '</span><textarea data-df="desc" rows="2" maxlength="' + (droom || 200) + '">' + esc(d.desc || '') + '</textarea></label>' +
+      numF('atk', 'ATK', 5110, 10) + numF('def', 'DEF', 5110, 10) + numF('level', 'Nível', 12, 1) +
+      '<label class="cf"><span>Tipo</span>' + sel('type', FMMod.TYPES.slice(0, 20)) + '</label>' +
+      '<label class="cf"><span>Atributo</span>' + sel('attr', FMMod.ATTRS.slice(0, 6)) + '</label>' +
+      '<label class="cf"><span>Guardian Star 1</span>' + sel('gs1', FMMod.STARS) + '</label>' +
+      '<label class="cf"><span>Guardian Star 2</span>' + sel('gs2', FMMod.STARS) + '</label></div>' +
+      '<h3>Quem dropa</h3>' + (d.drops.length ? d.drops.map(function (x, k) {
+        return '<div class="droprow"><select data-dd="' + k + ':duelist">' + duels.map(function (n, j) { return '<option value="' + (j + 1) + '"' + (j + 1 === x.duelist ? ' selected' : '') + '>' + esc(n) + '</option>'; }).join('') + '</select>' +
+          '<select data-dd="' + k + ':pool">' + [['pow', 'S/A POW'], ['bcd', 'B/C/D'], ['tec', 'S/A TEC']].map(function (p) { return '<option value="' + p[0] + '"' + (p[0] === x.pool ? ' selected' : '') + '>' + p[1] + '</option>'; }).join('') + '</select>' +
+          '<select data-dd="' + k + ':rate">' + [[8, 'Rara'], [32, 'Incomum'], [128, 'Comum'], [512, 'Muito comum']].map(function (r) { return '<option value="' + r[0] + '"' + (r[0] === x.rate ? ' selected' : '') + '>' + r[1] + '</option>'; }).join('') + '</select>' +
+          '<button class="ghost" data-ddel="' + k + '" aria-label="Remover">✕</button></div>';
+      }).join('') : '<p class="meta">Ninguém ainda.</p>') +
+      '<button class="secondary" id="btnAddDrop">+ Adicionar duelista</button>' +
+      '<div class="stack" style="margin-top:16px"><button id="btnSaveCustom">Salvar carta</button>' +
+      (d.index != null ? '<button class="secondary" id="btnDelCustom">Apagar esta carta</button>' : '') +
+      '<button class="secondary" id="btnCustom">Voltar</button></div>');
+  }
+
+  function readDraft() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-df]'), function (el) {
+      var f = el.dataset.df;
+      draft[f] = (f === 'name' || f === 'desc') ? el.value : (parseInt(el.value, 10) || 0);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-dd]'), function (el) {
+      var p = el.dataset.dd.split(':'), x = draft.drops[+p[0]];
+      if (x) x[p[1]] = p[1] === 'pool' ? el.value : parseInt(el.value, 10);
+    });
+  }
+
+  function saveDraft() {
+    readDraft();
+    var d = draft;
+    if (!d.art) return alert('Escolha uma imagem.');
+    if (!d.slot) return alert('Escolha a carta que será substituída.');
+    if (!FMMod.plain(d.name).trim()) return alert('Dê um nome para a carta.');
+    d.atk = Math.max(0, Math.min(5110, Math.round(d.atk / 10) * 10));
+    d.def = Math.max(0, Math.min(5110, Math.round(d.def / 10) * 10));
+    d.level = Math.max(1, Math.min(12, d.level));
+    d.name = FMMod.plain(d.name).slice(0, FMMod.nameRoom(mod.ed, d.slot));
+    d.title = packTitle(d.name);
+    var idx = d.index; delete d.index;
+    modOpts.custom = modOpts.custom || [];
+    if (modOpts.custom.some(function (c, i) { return c.slot === d.slot && i !== idx; })) return alert('Já existe uma carta sua no lugar dessa.');
+    if (idx == null) modOpts.custom.push(d); else modOpts.custom[idx] = d;
+    saveModOpts(); draft = null; showCustomList(); render();
+  }
+
+  // ---------- Deck inicial ----------
+  var starterDraft = null;
+  var GROUP_NAMES = ['Grupo 1', 'Grupo 2', 'Grupo 3', 'Grupo 4', 'Grupo 5', 'Grupo 6', 'Grupo 7'];
+  function showStarter() {
+    picker = null;
+    if (!starterDraft) starterDraft = JSON.parse(JSON.stringify(modOpts.starter || mod.ed.starter));
+    var total = starterDraft.reduce(function (a, g) { return a + (g.count | 0); }, 0);
+    openSheet('<h2 style="margin:0 36px 4px 0">Deck inicial</h2>' +
+      '<p class="meta">O jogo monta o deck do jogo novo sorteando cartas de 7 grupos. Cada grupo tem quantas cartas sorteia e quais podem sair. ' +
+      'Para garantir uma carta, deixe ela sozinha num grupo (ex.: 3 sorteios = 3 cópias). Total obrigatório: 40.</p>' +
+      '<p class="total ' + (total === 40 ? 'ok' : 'bad') + '">Total: <b>' + total + '</b> / 40</p>' +
+      starterDraft.map(function (g, r) {
+        return '<div class="sgroup"><div class="shead"><b>' + GROUP_NAMES[r] + '</b><label>sorteia <input type="number" inputmode="numeric" min="0" max="40" data-scount="' + r + '" value="' + g.count + '"></label></div>' +
+          '<div class="schips">' + g.cards.map(function (id) {
+            return '<span class="schip">' + thumb(id) + '<span>' + esc(cardName(id)) + '</span><button class="ghost" data-sdel="' + r + ':' + id + '" aria-label="Tirar">✕</button></span>';
+          }).join('') + '</div><button class="linkbtn" data-sadd="' + r + '">+ adicionar carta</button>' +
+          (g.cards.length > 1 ? ' · <button class="linkbtn" data-sclear="' + r + '">esvaziar</button>' : '') + '</div>';
+      }).join('') +
+      '<div class="stack"><button id="btnSaveStarter">Salvar deck inicial</button>' +
+      '<button class="secondary" id="btnStarterReset">Voltar ao original</button></div>');
   }
 
   async function modPicked(file) {
@@ -632,6 +817,29 @@
       });
     }
     else if (t.dataset.rreset) { delete modOpts.rituals[+t.dataset.rreset]; saveModOpts(); showRitualEditor(); render(); }
+    else if (t.id === 'btnCustom') { draft = null; showCustomList(); }
+    else if (t.id === 'btnNewCustom') editCustom(null);
+    else if (t.dataset.custom) editCustom(+t.dataset.custom);
+    else if (t.id === 'btnImg') { readDraft(); $('imgFile').value = ''; $('imgFile').click(); }
+    else if (t.id === 'btnSlot') { readDraft(); openPicker('Substituir qual carta?', function (id) { draft.slot = id; renderDraft(); }); }
+    else if (t.id === 'btnAddDrop') { readDraft(); draft.drops.push({ duelist: 1, pool: 'pow', rate: 32 }); renderDraft(); }
+    else if (t.dataset.ddel) { readDraft(); draft.drops.splice(+t.dataset.ddel, 1); renderDraft(); }
+    else if (t.id === 'btnSaveCustom') saveDraft();
+    else if (t.id === 'btnDelCustom') { if (confirm('Apagar esta carta?')) { modOpts.custom.splice(draft.index, 1); saveModOpts(); draft = null; showCustomList(); render(); } }
+    else if (t.id === 'btnStarter') { starterDraft = null; showStarter(); }
+    else if (t.dataset.sadd) { var gr = +t.dataset.sadd; openPicker('Adicionar ao ' + GROUP_NAMES[gr], function (id) {
+        if (id > 720) alert('As cartas 721 e 722 não podem entrar no deck inicial.');
+        else if (starterDraft[gr].cards.indexOf(id) < 0) starterDraft[gr].cards.push(id);
+        showStarter(); }); }
+    else if (t.dataset.sdel) { var sp = t.dataset.sdel.split(':').map(Number); starterDraft[sp[0]].cards = starterDraft[sp[0]].cards.filter(function (x) { return x !== sp[1]; }); showStarter(); }
+    else if (t.dataset.sclear) { starterDraft[+t.dataset.sclear].cards = []; showStarter(); }
+    else if (t.id === 'btnStarterReset') { modOpts.starter = null; starterDraft = null; saveModOpts(); showStarter(); render(); }
+    else if (t.id === 'btnSaveStarter') {
+      var tot = starterDraft.reduce(function (a, g) { return a + (g.count | 0); }, 0);
+      if (tot !== 40) alert('O total de sorteios precisa ser 40 (agora: ' + tot + ').');
+      else if (starterDraft.some(function (g) { return !g.cards.length; })) alert('Todo grupo precisa ter pelo menos uma carta.');
+      else { modOpts.starter = JSON.stringify(starterDraft) === JSON.stringify(mod.ed.starter) ? null : starterDraft; saveModOpts(); starterDraft = null; closeSheet(); render(); }
+    }
     else if (t.dataset.pick && picker) { var cb = picker.onPick; picker = null; cb(+t.dataset.pick); }
     else if (t.dataset.preset) {
       var pr = FMMod.PRESETS[t.dataset.preset];
@@ -652,6 +860,13 @@
     else if (t.dataset.card) showCard(+t.dataset.card, t.dataset.all);
   });
   $('file').addEventListener('change', function () { if (this.files.length) importFiles(this.files); });
+  $('imgFile').addEventListener('change', function () {
+    var f = this.files[0]; if (!f || !draft) return;
+    var img = new Image(), url = URL.createObjectURL(f);
+    img.onload = function () { var p = packArt(img); draft.art = p.art; draft.thumb = p.thumb; draft.preview = p.preview; URL.revokeObjectURL(url); renderDraft(); };
+    img.onerror = function () { alert('Não consegui abrir essa imagem.'); };
+    img.src = url;
+  });
   $('modFile').addEventListener('change', function () { if (this.files.length) modPicked(this.files[0]); });
   $('search').addEventListener('input', function () { query = this.value; render(); });
   document.addEventListener('input', function (ev) { if (ev.target.id === 'pickQ' && picker) { picker.q = ev.target.value; renderPicker(true); } });
@@ -661,6 +876,7 @@
       modOpts[ev.target.id] = isNaN(v) ? mn : Math.max(mn, Math.min(mx, v)); saveModOpts(); render(); return;
     }
     if (ev.target.classList.contains('modtog')) { modOpts[ev.target.id] = ev.target.checked; saveModOpts(); return; }
+    if (ev.target.dataset && ev.target.dataset.scount != null && starterDraft) { starterDraft[+ev.target.dataset.scount].count = Math.max(0, Math.min(40, parseInt(ev.target.value, 10) || 0)); showStarter(); return; }
     if (ev.target.id === 'randoDecks') { modOpts.randomizer.decks = ev.target.checked; saveModOpts(); return; }
     if (ev.target.id !== 'perDuel') return;
     try { localStorage.setItem('perDuel', Math.max(1, parseInt(ev.target.value, 10) || 1)); } catch (e) {}

@@ -62,6 +62,8 @@ Offsets da versão USA, conforme o projeto aberto
 | Custo em estrelas / senha | `WA_MRG.MRG` | `0xFB9808` |
 | Fusões | `WA_MRG.MRG` | `0xB87800` (`0x10000` bytes) |
 | Rituais | `WA_MRG.MRG` | `0xB97800` (registros de 5 × u16) |
+| Deck inicial | `WA_MRG.MRG` | `0xF92BD4` e `0xFBDBD4`: 7 × [u16 sorteios][722 u16 pesos], passo `0x5B8` |
+| Arte da carta | `WA_MRG.MRG` | `0x169000` + `0x3800`×carta: arte 102×96 + CLUT 256, título 96×14 4bpp, miniatura 40×32 + CLUT 64 (cópia da miniatura no setor da carta) |
 | Trava do Free Duel | `WA_MRG.MRG` | `0xF6D3DC` (`sb zero` que tranca duelistas sem a flag `0x6E0+id`) |
 
 As chances são em 2048 avos por tabela.

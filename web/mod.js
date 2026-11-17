@@ -44,6 +44,10 @@
     'Dinossauro', 'Réptil', 'Peixe', 'Serpente Marinha', 'Máquina', 'Trovão', 'Aqua', 'Pyro', 'Rocha', 'Planta',
     'Magia', 'Armadilha', 'Ritual', 'Equipamento'];
   var ATTRS = ['Luz', 'Trevas', 'Terra', 'Água', 'Fogo', 'Vento', 'Magia', 'Armadilha'];
+  var STARTER_SETS = [0xF92BD6, 0xFBDBD6]; // deck inicial (2 cópias): 7 x [u16 sorteios][722 u16 pesos], passo 0x5B8
+  var STARTER_STRIDE = 0x5B8;
+  var ART = 0x169000, ART_STRIDE = 0x3800;  // registro de arte de cada carta no WA_MRG
+  var DESC_PTR = 0x1B0A02, DESC_BASE = 0x1B11F4 - 0x9F4, NAME_PTR = 0x1C6002, NAME_BASE = 0x1C6800 - 0x6000;
   var STARS = ['—', 'Sol', 'Lua', 'Vênus', 'Mercúrio', 'Marte', 'Júpiter', 'Saturno', 'Urano', 'Plutão', 'Netuno'];
 
   var PRESETS = {
@@ -129,6 +133,18 @@
     ed.names = []; ed.duelistNames = [];
     for (var i = 0; i < CARDS; i++) ed.names.push(FM.text(slus, base + u16(slus, 0x1C6002 + i * 2)) || ('Carta ' + (i + 1)));
     for (i = 0; i < DUELISTS; i++) ed.duelistNames.push(FM.text(slus, base + u16(slus, 0x1C6652 + i * 2)) || ('Duelista ' + (i + 1)));
+    // deck inicial
+    ed.starterBlock = await src.mrg.read(STARTER_SETS[0] - 2, 7 * STARTER_STRIDE);
+    var sb2 = await src.mrg.read(STARTER_SETS[1] - 2, 7 * STARTER_STRIDE);
+    ed.starter = null;
+    var groups = [], total = 0, ok = same(ed.starterBlock, sb2);
+    for (i = 0; i < 7 && ok; i++) {
+      var o = i * STARTER_STRIDE, cnt = u16(ed.starterBlock, o), sum = 0, cards = [];
+      for (var c = 0; c < CARDS; c++) { var w = u16(ed.starterBlock, o + 2 + c * 2); if (w) { cards.push(c + 1); sum += w; } }
+      if (sum !== 2048) ok = false;
+      total += cnt; groups.push({ count: cnt, cards: cards });
+    }
+    if (ok && total === 40) ed.starter = groups;
     ed.rituals = [];
     for (i = 0; i < 24; i++) ed.rituals.push([0, 2, 4, 6, 8].map(function (k) { return u16(ed.ritualBlock, i * 10 + k); }));
     ed.caps = capabilities(ed);
@@ -245,6 +261,53 @@
     var p = u32(ed.slus, STATS + (id - 1) * 4), la = ed.slus[LEVEL_ATTR + id - 1];
     return { atk: (p & 0x1FF) * 10, def: ((p >>> 9) & 0x1FF) * 10, gs1: (p >>> 18) & 15, gs2: (p >>> 22) & 15,
       type: (p >>> 26) & 31, level: la & 15, attr: la >> 4 };
+  }
+
+  // ---- texto no formato do jogo
+  var ENC = {};
+  Object.keys(FM.CHARS).forEach(function (k) { if (!(FM.CHARS[k] in ENC)) ENC[FM.CHARS[k]] = +k; });
+  function plain(t) { return String(t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\x20-\x7e\n]/g, ''); }
+  function encodeText(t) {
+    var out = [];
+    plain(t).split('').forEach(function (ch) { if (ch === '\n') out.push(0xFE); else if (ch in ENC) out.push(ENC[ch]); });
+    return out;
+  }
+  function strLen(buf, pos) { var n = 0; while (pos + n < buf.length && buf[pos + n] !== 0xFF) n++; return n; }
+  function nameRoom(ed, id) { return strLen(ed.slus, NAME_BASE + u16(ed.slus, NAME_PTR + (id - 1) * 2)); }
+  function descRoom(ed, id) { return strLen(ed.slus, DESC_BASE + u16(ed.slus, DESC_PTR + (id - 1) * 2)); }
+  function descOf(ed, id) { return FM.text(ed.slus, DESC_BASE + u16(ed.slus, DESC_PTR + (id - 1) * 2)); }
+  function writeText(ed, ptrTable, base, id, t) {
+    var pos = base + u16(ed.slus, ptrTable + (id - 1) * 2), room = strLen(ed.slus, pos);
+    var bytes = encodeText(t).slice(0, room);
+    var buf = new Uint8Array(room + 1).fill(0xFF);
+    buf.set(bytes, 0);
+    ed.writes.push({ file: 'slus', off: pos, data: buf });
+  }
+  function b64(str) {
+    if (typeof atob === 'function') { var bin = atob(str), u = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; }
+    return new Uint8Array(Buffer.from(str, 'base64'));
+  }
+
+  // Carta personalizada: troca arte, miniatura, título desenhado, nome, descrição, atributos e drops de uma carta.
+  function applyCustom(ed, cc, log) {
+    var id = cc.slot | 0;
+    if (!(id >= 1 && id <= CARDS)) return;
+    var rec = ART + (id - 1) * ART_STRIDE;
+    if (cc.art && cc.thumb) {
+      var art = b64(cc.art), th = b64(cc.thumb);   // art: 9792 índices + 512 CLUT; thumb: 1280 + 128
+      if (art.length === 0x2640 + 0x200 && th.length === 0x500 + 0x80) {
+        ed.writes.push({ file: 'mrg', off: rec, data: art });
+        ed.writes.push({ file: 'mrg', off: rec + 0x2AE0, data: th });
+        ed.writes.push({ file: 'mrg', off: (id - 1) * 0x800, data: th }); // cópia da miniatura no setor da carta
+      }
+    }
+    if (cc.title) { var tt = b64(cc.title); if (tt.length === 0x2A0) ed.writes.push({ file: 'mrg', off: rec + 0x2840, data: tt }); }
+    if (cc.name) writeText(ed, NAME_PTR, NAME_BASE, id, cc.name);
+    if (cc.desc != null && cc.desc !== '') writeText(ed, DESC_PTR, DESC_BASE, id, cc.desc);
+    (cc.drops || []).forEach(function (d) {
+      if (d.duelist >= 1 && d.duelist <= DUELISTS && POOLS[d.pool] != null && d.rate > 0 && d.rate < 2048) setRate(ed, d.duelist, d.pool, id, d.rate | 0);
+    });
+    log.push('carta própria: ' + (cc.name || ('#' + id)));
   }
 
   function rng(seed) {
@@ -385,9 +448,33 @@
       ed.writes.push({ file: 'mrg', off: COSTS, data: costs });
       log.push('preço das senhas ' + (div === 'gratis' ? '1 starchip' : (div === 1 ? 'normal' : '÷' + div)) + (o.buyAll ? ', proibidas à venda' : ''));
     }
+    // cartas personalizadas: os atributos entram junto com as edições de carta
+    var cardEdits = Object.assign({}, o.cards || {});
+    (o.custom || []).forEach(function (cc) {
+      if (!cc || !cc.slot) return;
+      cardEdits[cc.slot] = { atk: cc.atk, def: cc.def, level: cc.level, type: cc.type, attr: cc.attr, gs1: cc.gs1, gs2: cc.gs2 };
+      applyCustom(ed, cc, log);
+    });
+    if (o.starter && ed.starter) {
+      var total = o.starter.reduce(function (a, g) { return a + (g.count | 0); }, 0);
+      var valid = o.starter.length === 7 && total === 40 && o.starter.every(function (g) {
+        return g.cards.length && g.cards.every(function (x) { return x >= 1 && x <= 720; });
+      });
+      if (!valid) throw new Error('deck inicial inválido: são 7 grupos, todos com cartas, somando 40 sorteios (cartas 721 e 722 não entram)');
+      var blk = new Uint8Array(ed.starterBlock);
+      o.starter.forEach(function (g, r) {
+        var off = r * STARTER_STRIDE, t = normalize(g.cards, g.cards.map(function () { return 1; }));
+        blk[off] = g.count & 255; blk[off + 1] = g.count >> 8;
+        for (var c = 0; c < CARDS; c++) { blk[off + 2 + c * 2] = t[c] & 255; blk[off + 3 + c * 2] = t[c] >> 8; }
+      });
+      if (!same(blk, ed.starterBlock)) {
+        STARTER_SETS.forEach(function (base) { ed.writes.push({ file: 'mrg', off: base - 2, data: blk }); });
+        log.push('deck inicial personalizado');
+      }
+    }
     var nCards = 0;
-    Object.keys(o.cards || {}).forEach(function (k) {
-      var id = +k, e = o.cards[k], cur = cardInfo(ed, id);
+    Object.keys(cardEdits).forEach(function (k) {
+      var id = +k, e = cardEdits[k], cur = cardInfo(ed, id);
       var v = {}; ['atk', 'def', 'gs1', 'gs2', 'type', 'level', 'attr'].forEach(function (f) { v[f] = e[f] != null ? e[f] : cur[f]; });
       var packed = ((Math.min(5110, Math.max(0, v.atk)) / 10) & 0x1FF) | (((Math.min(5110, Math.max(0, v.def)) / 10) & 0x1FF) << 9) |
         ((v.gs1 & 15) << 18) | ((v.gs2 & 15) << 22) | ((v.type & 31) << 26);
@@ -396,7 +483,7 @@
       ed.writes.push({ file: 'slus', off: LEVEL_ATTR + id - 1, data: new Uint8Array([(v.level & 15) | ((v.attr & 15) << 4)]) });
       nCards++;
     });
-    if (nCards) log.push(nCards + ' carta(s) editada(s)');
+    var nc = Object.keys(o.cards || {}).length; if (nc) log.push(nc + ' carta(s) editada(s)');
     var rb = ed.ritualBlock.slice(), nr = 0;
     Object.keys(o.rituals || {}).forEach(function (k) {
       var row = o.rituals[k];
@@ -460,5 +547,6 @@
   }
 
   return { open: open, apply: apply, buildPatch: buildPatch, PRESETS: PRESETS, fixSector: fixSector, cardInfo: cardInfo,
-    TYPES: TYPES, ATTRS: ATTRS, STARS: STARS, TERRAIN_LEVELS: TERRAIN_LEVELS };
+    TYPES: TYPES, ATTRS: ATTRS, STARS: STARS, TERRAIN_LEVELS: TERRAIN_LEVELS,
+    nameRoom: nameRoom, descRoom: descRoom, descOf: descOf, plain: plain };
 });
