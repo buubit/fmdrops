@@ -310,7 +310,7 @@
   }
 
   return {
-    CARDS: CARDS, DUELISTS: DUELISTS, OFF: OFF, CHARS: CHARS, TYPES: TYPES,
+    CARDS: CARDS, DUELISTS: DUELISTS, OFF: OFF, CHARS: CHARS, TYPES: TYPES, text: text,
     fromFile: fromFile, open: open, openImage: openImage, parse: parse
   };
 });

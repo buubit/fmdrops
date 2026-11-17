@@ -151,3 +151,25 @@ button:disabled { opacity: .6; }
 .linkbtn { background: none; color: var(--blue); padding: 0; font-weight: 600; text-decoration: underline; border-radius: 0; }
 #btnModBuild { margin-top: 8px; }
 .chips { flex-wrap: wrap; } .chips button { white-space: nowrap; padding: 7px 14px; }
+
+/* ---- Randomizer e editores ---- */
+.rando { border-radius: 14px; padding: 14px 16px; margin-top: 12px; border: 1px dashed var(--line); background: var(--panel); display: flex; flex-direction: column; gap: 10px; }
+.rando.on { border-style: solid; border-color: var(--gold); background: linear-gradient(135deg, rgba(52,211,153,.14), rgba(56,189,248,.10)); }
+.rando small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+.rando-actions { display: flex; gap: 8px; }
+.rando-actions button { flex: 1; }
+.toggle.mini { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--muted); }
+.sheet-search { width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 10px 16px; margin-bottom: 10px; color: var(--text); }
+.art.noart { display: inline-flex; align-items: center; justify-content: center; color: var(--muted); font-size: 11px; background: var(--panel2); }
+.cfgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
+.cf { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+.cf input, .cf select { background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; font-size: 15px; }
+.rcard { background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; padding: 10px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; }
+.rcard.edited { border-color: var(--gold); }
+.rhead { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+.rtrib { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.rtrib .rslot { flex-direction: column; text-align: center; }
+.rtrib .rslot .art { width: 100%; }
+.rslot { display: flex; align-items: center; gap: 8px; background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 6px 8px; text-align: left; font-weight: 500; font-size: 12px; }
+.rslot .art { width: 44px; flex: none; border-radius: 4px; }
+.rslot small { display: block; color: var(--muted); font-size: 10px; font-weight: 400; }

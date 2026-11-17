@@ -338,8 +338,9 @@
 
   /* ---------- Mod ("GameShark") ---------- */
 
-  var mod = { blob: null, caps: null, error: '', busy: false };
-  var MOD_DEFAULT = { freeDuel: true, drops: 100, starchips: 0, lp: 8000, allDrops: true, megamorph: true, difficulty: 'normal' };
+  var mod = { blob: null, caps: null, ed: null, error: '', busy: false };
+  var MOD_DEFAULT = { cards: {}, rituals: {}, randomizer: { on: false, seed: 1, decks: false }, dropPool: 'rank', deckLimit: 3, terrain: 'normal', priceDiv: 1, buyAll: false,
+    freeDuel: true, drops: 100, starchips: 0, lp: 8000, allDrops: true, megamorph: true, difficulty: 'normal' };
   var modOpts = (function () {
     try { return Object.assign({}, MOD_DEFAULT, JSON.parse(localStorage.getItem('modOpts') || '{}')); } catch (e) { return Object.assign({}, MOD_DEFAULT); }
   })();
@@ -375,6 +376,7 @@
     main.innerHTML = head + '<p class="meta">Base: <b>' + esc(mod.blob.name || 'jogo') + '</b> (' + esc(c.exe) + ') · ' +
       '<button class="linkbtn" id="btnModPick">trocar</button></p></div>' +
       '<h3>Atalhos</h3><div class="chips">' + presets.map(function (p) { return '<button data-preset="' + p[0] + '">' + p[1] + '</button>'; }).join('') + '</div>' +
+      randomizerCard() +
       '<h3>Opções</h3>' +
       num('drops', 'Cartas por duelo vencido', 'Original: 1', modOpts.drops, 1, 999, [1, 5, 15, 100]) +
       num('starchips', 'Starchips extras por duelo', 'Somados ao prêmio normal', modOpts.starchips, 0, 30000, [0, 100, 500]) +
@@ -382,6 +384,17 @@
       tog('freeDuel', 'Todos os duelistas no Free Duel', 'Liberados desde o início, sem precisar avançar na história', c.freeDuel) +
       tog('allDrops', 'Todas as cartas dropáveis', 'As 82 cartas que ninguém dropa vão para duelistas temáticos') +
       tog('megamorph', 'Megamorph em S/A POW', 'Pegasus, DarkNite e Heishin passam a dropar no POW também') +
+      (c.dropPool != null ? segOpt('dropPool', 'Cartas extras do drop vêm de', 'Rank: como o jogo decide. As outras ignoram o rank (só as cartas extras; a carta da tela de resultado segue o rank).',
+        [['rank', 'Rank'], ['pow', 'S/A POW'], ['bcd', 'B/C/D'], ['tec', 'S/A TEC']]) : '') +
+      num('deckLimit', 'Cópias da mesma carta no deck', 'Original: 3', modOpts.deckLimit, 1, 40, [3, 5, 40]) +
+      (c.terrain ? segOpt('terrain', 'Bônus de terreno', 'Quanto o campo soma no ATK/DEF dos tipos favorecidos (original: 500)',
+        [['off', 'Nenhum'], ['normal', '500'], ['forte', '1000'], ['max', '1270']]) : '') +
+      segOpt('priceDiv', 'Preço das cartas por senha', 'Custo em starchips na loja de senhas',
+        [[1, 'Normal'], [2, '÷2'], [5, '÷5'], [10, '÷10'], ['gratis', '1 ★']]) +
+      tog('buyAll', 'Vender as cartas "proibidas"', 'Cartas com senha mas preço 999999 (Blue-eyes, Exodia…) passam a custar 99999 antes do desconto') +
+      '<h3>Editores</h3><div class="stack">' +
+      '<button class="secondary" id="btnEditCards">Editar cartas' + countTag(modOpts.cards) + '</button>' +
+      '<button class="secondary" id="btnEditRituals">Editar rituais' + countTag(modOpts.rituals) + '</button></div>' +
       '<div class="opt"><span><b>Dificuldade dos decks</b><small>Difícil: os duelistas puxam mais os monstros fortes que já têm. Fácil: o contrário.</small></span>' +
       '<div class="seg">' + diffs.map(function (d) {
         return '<button data-diff="' + d[0] + '" aria-pressed="' + (modOpts.difficulty === d[0]) + '">' + d[1] + '</button>';
@@ -392,12 +405,115 @@
         '<button id="btnModBuild">' + (native && native.buildImage ? 'Gerar .bin modificado' : 'Baixar patch .ppf') + '</button>') + '</div>';
   }
 
+  function countTag(o) { var n = Object.keys(o || {}).length; return n ? ' <span class="badge">' + n + ' alterado' + (n > 1 ? 's' : '') + '</span>' : ''; }
+
+  function segOpt(id, label, help, items) {
+    return '<div class="opt"><span><b>' + label + '</b><small>' + help + '</small></span><div class="seg">' + items.map(function (it) {
+      return '<button data-seg="' + id + '" data-v="' + it[0] + '" aria-pressed="' + (String(modOpts[id]) === String(it[0])) + '">' + it[1] + '</button>';
+    }).join('') + '</div></div>';
+  }
+
+  function randomizerCard() {
+    var r = modOpts.randomizer || {};
+    return '<div class="rando' + (r.on ? ' on' : '') + '"><div><b>🎲 Randomizer</b><small>' +
+      (r.on ? 'Ligado · semente <b>' + r.seed + '</b>. Cada duelista dropa cartas sorteadas e todas as 722 caem de alguém. É como um jogo novo.'
+        : 'Sorteia de novo quem dropa o quê. Todas as 722 cartas caem de alguém. Um jogo novo a cada sorteio.') + '</small></div>' +
+      '<div class="rando-actions"><button id="btnRando">' + (r.on ? 'Sortear de novo' : 'Randomizar tudo') + '</button>' +
+      (r.on ? '<button class="secondary" id="btnRandoOff">Desligar</button>' : '') + '</div>' +
+      (r.on ? '<label class="toggle mini"><span>Sortear também os decks dos duelistas (mantém a força de cada um)</span>' +
+        '<input type="checkbox" id="randoDecks"' + (r.decks ? ' checked' : '') + '><i></i></label>' : '') + '</div>';
+  }
+
+  // ---- seletor de carta (usado pelos editores)
+  var picker = null;
+  function cardName(id) { return (mod.ed && mod.ed.names[id - 1]) || (game && game.cards[id - 1].name) || ('Carta ' + id); }
+  function thumb(id) { return game ? art(id) : '<span class="art noart">' + id + '</span>'; }
+  function cardRow(id, attrs, extra) {
+    return '<button class="item" ' + attrs + '>' + thumb(id) + '<span class="grow">' + esc(cardName(id)) + '<small>#' + id + (extra ? ' · ' + extra : '') + '</small></span></button>';
+  }
+  function openPicker(title, onPick) {
+    picker = { title: title, onPick: onPick, q: '' };
+    renderPicker();
+  }
+  function renderPicker(keepFocus) {
+    var q = picker.q.trim().toLowerCase(), list = [];
+    for (var id = 1; id <= 722 && list.length < 80; id++) {
+      if (!q || cardName(id).toLowerCase().indexOf(q) >= 0 || String(id) === q) list.push(id);
+    }
+    var html = '<h2 style="margin:0 36px 8px 0">' + esc(picker.title) + '</h2>' +
+      '<input id="pickQ" class="sheet-search" type="search" placeholder="Buscar carta ou número" value="' + esc(picker.q) + '">' +
+      '<div class="list" id="pickList">' + list.map(function (id) { return cardRow(id, 'data-pick="' + id + '"'); }).join('') + '</div>';
+    if (keepFocus) { $('pickList').outerHTML = '<div class="list" id="pickList">' + list.map(function (id) { return cardRow(id, 'data-pick="' + id + '"'); }).join('') + '</div>'; }
+    else openSheet(html);
+  }
+
+  // ---- editor de cartas
+  var cardSearch = '';
+  function showCardEditorList() {
+    picker = null;
+    var edited = Object.keys(modOpts.cards || {}).map(Number);
+    openSheet('<h2 style="margin:0 36px 4px 0">Editor de cartas</h2><p class="meta">ATK, DEF, nível, tipo, atributo e Guardian Stars de qualquer carta.</p>' +
+      '<button id="btnPickCard">Escolher carta para editar</button>' +
+      (edited.length ? '<h3>Editadas</h3><div class="list">' + edited.map(function (id) {
+        var e = modOpts.cards[id];
+        return cardRow(id, 'data-editcard="' + id + '"', (e.atk != null ? e.atk : '?') + '/' + (e.def != null ? e.def : '?'));
+      }).join('') + '</div>' : '<p class="meta" style="margin-top:12px">Nenhuma carta editada ainda.</p>'));
+  }
+  function showCardForm(id) {
+    picker = null;
+    var cur = FMMod.cardInfo(mod.ed, id), e = Object.assign({}, cur, modOpts.cards[id] || {});
+    var sel = function (f, names, from) {
+      return '<select data-cf="' + f + '">' + names.map(function (n, i) { return '<option value="' + (i + (from || 0)) + '"' + ((i + (from || 0)) === e[f] ? ' selected' : '') + '>' + esc(n) + '</option>'; }).join('') + '</select>';
+    };
+    var numF = function (f, label, max, step) {
+      return '<label class="cf"><span>' + label + '</span><input type="number" inputmode="numeric" data-cf="' + f + '" min="0" max="' + max + '" step="' + step + '" value="' + e[f] + '"></label>';
+    };
+    openSheet('<div class="hero">' + thumb(id) + '<div><h2>' + esc(cardName(id)) + '</h2><div class="meta">#' + id + ' · original: ' + cur.atk + '/' + cur.def + ', ' +
+      esc(FMMod.TYPES[cur.type] || '?') + '</div></div></div>' +
+      '<div class="cfgrid" data-cardform="' + id + '">' + numF('atk', 'ATK', 5110, 10) + numF('def', 'DEF', 5110, 10) + numF('level', 'Nível', 12, 1) +
+      '<label class="cf"><span>Tipo</span>' + sel('type', FMMod.TYPES) + '</label>' +
+      '<label class="cf"><span>Atributo</span>' + sel('attr', FMMod.ATTRS) + '</label>' +
+      '<label class="cf"><span>Guardian Star 1</span>' + sel('gs1', FMMod.STARS) + '</label>' +
+      '<label class="cf"><span>Guardian Star 2</span>' + sel('gs2', FMMod.STARS) + '</label></div>' +
+      '<p class="meta">ATK e DEF vão de 0 a 5110, de 10 em 10. Mudar o tipo de monstro para Magia/Armadilha pode deixar a carta sem efeito.</p>' +
+      '<div class="stack"><button data-savecard="' + id + '">Salvar</button>' +
+      (modOpts.cards[id] ? '<button class="secondary" data-resetcard="' + id + '">Voltar ao original</button>' : '') +
+      '<button class="secondary" id="btnEditCards">Voltar</button></div>');
+  }
+  function saveCardForm(id) {
+    var cur = FMMod.cardInfo(mod.ed, id), out = {}, changed = false;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-cf]'), function (el) {
+      var f = el.dataset.cf, v = parseInt(el.value, 10) || 0;
+      if (f === 'atk' || f === 'def') v = Math.max(0, Math.min(5110, Math.round(v / 10) * 10));
+      if (f === 'level') v = Math.max(0, Math.min(12, v));
+      out[f] = v; if (v !== cur[f]) changed = true;
+    });
+    if (changed) modOpts.cards[id] = out; else delete modOpts.cards[id];
+    saveModOpts(); showCardEditorList(); render();
+  }
+
+  // ---- editor de rituais
+  function showRitualEditor() {
+    picker = null;
+    var rows = mod.ed.rituals.map(function (r, i) { return (modOpts.rituals && modOpts.rituals[i]) || r; });
+    var slot = function (i, j, id, label) {
+      return '<button class="rslot" data-rslot="' + i + ':' + j + '">' + thumb(id) + '<span><small>' + label + '</small>' + esc(cardName(id)) + '</span></button>';
+    };
+    openSheet('<h2 style="margin:0 36px 4px 0">Editor de rituais</h2><p class="meta">Toque numa carta para trocar. São 24 rituais: carta de ritual + 3 sacrifícios no campo = monstro invocado.</p>' +
+      rows.map(function (r, i) {
+        return '<div class="rcard' + (modOpts.rituals && modOpts.rituals[i] ? ' edited' : '') + '"><div class="rhead"><b>Ritual ' + (i + 1) + '</b>' +
+          (modOpts.rituals && modOpts.rituals[i] ? '<button class="linkbtn" data-rreset="' + i + '">voltar ao original</button>' : '') + '</div>' +
+          slot(i, 0, r[0], 'Carta de ritual') + '<div class="rtrib">' + slot(i, 1, r[1], 'Sacrifício') + slot(i, 2, r[2], 'Sacrifício') + slot(i, 3, r[3], 'Sacrifício') + '</div>' +
+          slot(i, 4, r[4], 'Invoca') + '</div>';
+      }).join(''));
+  }
+
   async function modPicked(file) {
     mod.blob = FM.fromFile(file); mod.caps = null; mod.error = ''; render();
     try {
       var ed = await FMMod.open(mod.blob);
-      mod.caps = ed.caps;
-      ['drops', 'starchips', 'lp'].forEach(function (k) {
+      mod.caps = ed.caps; mod.ed = ed;
+      ['drops', 'starchips', 'lp', 'deckLimit'].forEach(function (k) {
         if (ed.caps[k] == null) modOpts[k] = null; else if (modOpts[k] == null) modOpts[k] = ed.caps[k];
       });
     } catch (e) { mod.blob = null; mod.error = e.message || String(e); }
@@ -496,6 +612,27 @@
     else if (t.id === 'btnModPick') { $('modFile').value = ''; $('modFile').click(); }
     else if (t.id === 'btnModBuild') modBuild();
     else if (t.id === 'btnOutFolder') native.chooseOutputFolder();
+    else if (t.dataset.seg) { var sv = t.dataset.v; modOpts[t.dataset.seg] = /^\d+$/.test(sv) ? +sv : sv; saveModOpts(); render(); }
+    else if (t.id === 'btnRando') { modOpts.randomizer = { on: true, seed: 1 + Math.floor(Math.random() * 999999), decks: !!(modOpts.randomizer && modOpts.randomizer.decks) }; saveModOpts(); render(); }
+    else if (t.id === 'btnRandoOff') { modOpts.randomizer.on = false; saveModOpts(); render(); }
+    else if (t.id === 'btnEditCards') showCardEditorList();
+    else if (t.id === 'btnPickCard') openPicker('Qual carta editar?', function (id) { showCardForm(id); });
+    else if (t.dataset.editcard) showCardForm(+t.dataset.editcard);
+    else if (t.dataset.savecard) saveCardForm(+t.dataset.savecard);
+    else if (t.dataset.resetcard) { delete modOpts.cards[+t.dataset.resetcard]; saveModOpts(); showCardEditorList(); render(); }
+    else if (t.id === 'btnEditRituals') showRitualEditor();
+    else if (t.dataset.rslot) {
+      var ij = t.dataset.rslot.split(':').map(Number);
+      openPicker(['Carta de ritual', 'Sacrifício 1', 'Sacrifício 2', 'Sacrifício 3', 'Monstro invocado'][ij[1]] + ' · Ritual ' + (ij[0] + 1), function (id) {
+        var row = ((modOpts.rituals && modOpts.rituals[ij[0]]) || mod.ed.rituals[ij[0]]).slice();
+        row[ij[1]] = id;
+        modOpts.rituals = modOpts.rituals || {};
+        if (row.join() === mod.ed.rituals[ij[0]].join()) delete modOpts.rituals[ij[0]]; else modOpts.rituals[ij[0]] = row;
+        saveModOpts(); showRitualEditor(); render();
+      });
+    }
+    else if (t.dataset.rreset) { delete modOpts.rituals[+t.dataset.rreset]; saveModOpts(); showRitualEditor(); render(); }
+    else if (t.dataset.pick && picker) { var cb = picker.onPick; picker = null; cb(+t.dataset.pick); }
     else if (t.dataset.preset) {
       var pr = FMMod.PRESETS[t.dataset.preset];
       Object.keys(pr).forEach(function (k) { if (!(mod.caps && ['drops', 'starchips', 'lp', 'freeDuel'].indexOf(k) >= 0 && mod.caps[k] == null)) modOpts[k] = pr[k]; });
@@ -517,12 +654,14 @@
   $('file').addEventListener('change', function () { if (this.files.length) importFiles(this.files); });
   $('modFile').addEventListener('change', function () { if (this.files.length) modPicked(this.files[0]); });
   $('search').addEventListener('input', function () { query = this.value; render(); });
+  document.addEventListener('input', function (ev) { if (ev.target.id === 'pickQ' && picker) { picker.q = ev.target.value; renderPicker(true); } });
   document.addEventListener('change', function (ev) {
     if (ev.target.classList.contains('modnum')) {
       var v = parseInt(ev.target.value, 10), mn = +ev.target.min, mx = +ev.target.max;
       modOpts[ev.target.id] = isNaN(v) ? mn : Math.max(mn, Math.min(mx, v)); saveModOpts(); render(); return;
     }
     if (ev.target.classList.contains('modtog')) { modOpts[ev.target.id] = ev.target.checked; saveModOpts(); return; }
+    if (ev.target.id === 'randoDecks') { modOpts.randomizer.decks = ev.target.checked; saveModOpts(); return; }
     if (ev.target.id !== 'perDuel') return;
     try { localStorage.setItem('perDuel', Math.max(1, parseInt(ev.target.value, 10) || 1)); } catch (e) {}
   });

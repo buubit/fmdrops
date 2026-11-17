@@ -32,6 +32,20 @@
 
   var DIFFICULTY = { facil: -1, normal: 0, dificil: 2, muito: 3 };
 
+  // ---- mais endereços
+  var DECK_LIMIT_SITE = 0x80033870;  // sltiu v0,v0,3: máximo de cópias da mesma carta no deck
+  var TERRAIN_TABLE = 0x800909D4;    // s8[20][6] bônus de terreno por tipo (x10 no jogo)
+  var COSTS = 0xFB9808;              // WA_MRG: [u32 custo, u32 senha] x 722
+  var RITUALS = 0xB97800;            // WA_MRG: 24 x [ritual, sacrifício x3, resultado] (u16)
+  var STATS = 0x1C4A44, LEVEL_ATTR = 0x1C5B33; // SLUS (offset de arquivo)
+  var POOL_SITE = 0x30;              // dentro da rotina de drop: "sll a0,v0,1 / addiu a0,zero,1" escolhem a tabela
+  var TERRAIN_LEVELS = { off: 0, normal: 50, forte: 100, max: 127 };
+  var TYPES = ['Dragão', 'Mago', 'Zumbi', 'Guerreiro', 'Besta-Guerreira', 'Besta', 'Besta Alada', 'Demônio', 'Fada', 'Inseto',
+    'Dinossauro', 'Réptil', 'Peixe', 'Serpente Marinha', 'Máquina', 'Trovão', 'Aqua', 'Pyro', 'Rocha', 'Planta',
+    'Magia', 'Armadilha', 'Ritual', 'Equipamento'];
+  var ATTRS = ['Luz', 'Trevas', 'Terra', 'Água', 'Fogo', 'Vento', 'Magia', 'Armadilha'];
+  var STARS = ['—', 'Sol', 'Lua', 'Vênus', 'Mercúrio', 'Marte', 'Júpiter', 'Saturno', 'Urano', 'Plutão', 'Netuno'];
+
   var PRESETS = {
     original: { freeDuel: false, drops: 1, starchips: 0, lp: 8000, allDrops: false, megamorph: false, difficulty: 'normal' },
     drop100: { freeDuel: true, drops: 100, starchips: 0, lp: 8000, allDrops: true, megamorph: true, difficulty: 'normal' },
@@ -109,6 +123,14 @@
     ed.duelBlock = await src.mrg.read(DUELIST_BASE, DUELISTS * DUELIST_STRIDE);
     ed.duelBlockOrig = ed.duelBlock.slice();
     ed.freeDuel = await src.mrg.read(FREE_DUEL_SITE, 4);
+    ed.costs = await src.mrg.read(COSTS, CARDS * 8);
+    ed.ritualBlock = await src.mrg.read(RITUALS, 24 * 10);
+    var base = 0x1C6800 - 0x6000;
+    ed.names = []; ed.duelistNames = [];
+    for (var i = 0; i < CARDS; i++) ed.names.push(FM.text(slus, base + u16(slus, 0x1C6002 + i * 2)) || ('Carta ' + (i + 1)));
+    for (i = 0; i < DUELISTS; i++) ed.duelistNames.push(FM.text(slus, base + u16(slus, 0x1C6652 + i * 2)) || ('Duelista ' + (i + 1)));
+    ed.rituals = [];
+    for (i = 0; i < 24; i++) ed.rituals.push([0, 2, 4, 6, 8].map(function (k) { return u16(ed.ritualBlock, i * 10 + k); }));
     ed.caps = capabilities(ed);
     return ed;
   }
@@ -129,7 +151,18 @@
     var fd = ed.freeDuel, freeDuel = null;
     if (same(fd, new Uint8Array(FREE_DUEL_LOCK))) freeDuel = false;
     else if (u32(fd, 0) === 0) freeDuel = true;
-    return { drops: drops, starchips: starchips, lp: life, freeDuel: freeDuel, exe: ed.src.slusName };
+    var dl = exeBytes(ed, DECK_LIMIT_SITE, 4), deckLimit = (dl[2] === 0x42 && dl[3] === 0x2C) ? u16(dl, 0) : null;
+    var tt = exeBytes(ed, TERRAIN_TABLE, 120), terrain = null, mags = {};
+    for (var i = 0; i < 120; i++) { var v = tt[i] > 127 ? tt[i] - 256 : tt[i]; if (v) mags[Math.abs(v)] = 1; }
+    var mk = Object.keys(mags);
+    if (mk.length === 1) terrain = +mk[0];
+    var pool = null;
+    if (drops > 1) {
+      var r = exeBytes(ed, ROUTINE + POOL_SITE, 8);
+      pool = hex(r) === '4020020001000424' ? 'rank' : (r[2] === 4 && r[3] === 0x24 && r[6] === 4 && r[7] === 0x24) ? ['pow', 'bcd', 'tec'][r[0]] || 'rank' : null;
+    }
+    return { drops: drops, starchips: starchips, lp: life, freeDuel: freeDuel, deckLimit: deckLimit, terrain: terrain,
+      dropPool: drops != null ? (pool || 'rank') : null, exe: ed.src.slusName };
   }
 
   function writeExe(ed, ram, bytes) { ed.writes.push({ file: 'slus', off: ed.exeOff(ram), data: bytes }); }
@@ -208,6 +241,75 @@
     }
   }
 
+  function cardInfo(ed, id) {
+    var p = u32(ed.slus, STATS + (id - 1) * 4), la = ed.slus[LEVEL_ATTR + id - 1];
+    return { atk: (p & 0x1FF) * 10, def: ((p >>> 9) & 0x1FF) * 10, gs1: (p >>> 18) & 15, gs2: (p >>> 22) & 15,
+      type: (p >>> 26) & 31, level: la & 15, attr: la >> 4 };
+  }
+
+  function rng(seed) {
+    var a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      var t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  // Distribui 2048 entre as cartas escolhidas, proporcional aos pesos, nenhuma com 0.
+  function normalize(cards, weights) {
+    var tot = weights.reduce(function (a, b) { return a + b; }, 0), t = new Array(CARDS).fill(0), fr = [];
+    cards.forEach(function (c, i) { var x = weights[i] * 2048 / tot; t[c - 1] = Math.max(1, Math.floor(x)); fr.push([c, x - Math.floor(x)]); });
+    var sum = t.reduce(function (a, b) { return a + b; }, 0);
+    fr.sort(function (a, b) { return b[1] - a[1]; });
+    for (var k = 0; sum !== 2048; k++) {
+      var c = fr[k % fr.length][0];
+      if (sum < 2048) { t[c - 1]++; sum++; } else if (t[c - 1] > 1) { t[c - 1]--; sum--; }
+    }
+    return t;
+  }
+
+  // Randomizer: cada duelista ganha tabelas de drop sorteadas; toda carta cai de alguém.
+  // Com decks: monta decks novos mantendo a força média de cada duelista (a progressão continua fazendo sentido).
+  function randomize(ed, seed, decks) {
+    var R = rng(seed), seen = new Uint8Array(CARDS + 1), st = cardStats(ed);
+    function pick(n, pool) {
+      var chosen = {}, out = [];
+      while (out.length < n && out.length < pool.length) {
+        var c = pool[Math.floor(R() * pool.length)];
+        if (!chosen[c]) { chosen[c] = 1; out.push(c); }
+      }
+      return out;
+    }
+    var all = []; for (var i = 1; i <= CARDS; i++) all.push(i);
+    for (var d = 1; d <= DUELISTS; d++) {
+      ['pow', 'bcd', 'tec'].forEach(function (pool) {
+        var cards = pick(30 + Math.floor(R() * 60), all);
+        var w = cards.map(function () { return 1 + Math.floor(Math.pow(R(), 2) * 63); });
+        cards.forEach(function (c) { seen[c] = 1; });
+        setTable(ed, d, pool, normalize(cards, w));
+      });
+    }
+    for (i = 1; i <= CARDS; i++) if (!seen[i]) {
+      var dd = 1 + Math.floor(R() * DUELISTS), pp = ['pow', 'bcd', 'tec'][Math.floor(R() * 3)];
+      setRate(ed, dd, pp, i, 8);
+    }
+    if (!decks) return;
+    var monsters = all.filter(function (c) { return st[c - 1].monster && st[c - 1].atk > 0; });
+    var others = all.filter(function (c) { return !st[c - 1].monster; });
+    for (d = 1; d <= DUELISTS; d++) {
+      var t = table(ed, d, 'deck'), mw = 0, ms = 0;
+      t.forEach(function (v, i) { if (v && st[i].monster) { mw += v; ms += v * st[i].atk; } });
+      var avg = mw ? ms / mw : 1200, near = [];
+      for (var spread = 400; near.length < 40; spread += 300)
+        near = monsters.filter(function (c) { return Math.abs(st[c - 1].atk - avg) <= spread; });
+      var deckCards = pick(26 + Math.floor(R() * 10), near).concat(pick(8 + Math.floor(R() * 8), others));
+      setTable(ed, d, 'deck', normalize(deckCards, deckCards.map(function () { return 1 + Math.floor(R() * 8); })));
+    }
+  }
+
   /* ---------- aplicar opções ---------- */
 
   function apply(ed, o) {
@@ -233,7 +335,11 @@
       writeExe(ed, LP_SITE, new Uint8Array([l & 255, l >> 8, 0x02, 0x24]));
       log.push('vida inicial ' + l);
     }
-    if (o.allDrops) {
+    if (o.randomizer && o.randomizer.on) {
+      randomize(ed, o.randomizer.seed >>> 0, !!o.randomizer.decks);
+      log.push('Randomizer (semente ' + o.randomizer.seed + (o.randomizer.decks ? ', com decks' : '') + ')');
+    }
+    if (o.allDrops && !(o.randomizer && o.randomizer.on)) {
       ALL_DROPS.forEach(function (r) {
         [r[1], r[2]].forEach(function (d) {
           ['pow', 'tec'].forEach(function (pool) { if (table(ed, d, pool)[r[0] - 1] < r[3]) setRate(ed, d, pool, r[0], r[3]); });
@@ -249,6 +355,56 @@
       ed.writes.push({ file: 'mrg', off: FREE_DUEL_SITE, data: o.freeDuel ? new Uint8Array(4) : new Uint8Array(FREE_DUEL_LOCK) });
       log.push(o.freeDuel ? 'todos os duelistas no Free Duel' : 'Free Duel normal');
     }
+    // tabela de drop das cartas extras (rotina instalada)
+    var finalDrops = o.drops != null && c.drops != null ? Math.max(1, o.drops | 0) : c.drops;
+    if (finalDrops > 1 && o.dropPool && c.dropPool != null && (o.dropPool !== c.dropPool || (o.drops !== c.drops))) {
+      var code = o.dropPool === 'rank' ? fromHex('4020020001000424') :
+        (function (k) { return new Uint8Array([k, 0, 4, 0x24, k, 0, 4, 0x24]); })({ pow: 0, bcd: 1, tec: 2 }[o.dropPool]);
+      writeExe(ed, ROUTINE + POOL_SITE, code);
+      if (o.dropPool !== 'rank') log.push('cartas extras sempre de ' + { pow: 'S/A POW', bcd: 'B/C/D', tec: 'S/A TEC' }[o.dropPool]);
+    }
+    if (o.deckLimit != null && c.deckLimit != null && o.deckLimit !== c.deckLimit) {
+      var dl = Math.max(1, Math.min(40, o.deckLimit | 0));
+      writeExe(ed, DECK_LIMIT_SITE, new Uint8Array([dl, 0, 0x42, 0x2C]));
+      log.push('até ' + dl + ' cópias por carta no deck');
+    }
+    if (o.terrain && c.terrain != null && TERRAIN_LEVELS[o.terrain] !== c.terrain) {
+      var tt = exeBytes(ed, TERRAIN_TABLE, 120).slice(), lv = TERRAIN_LEVELS[o.terrain];
+      // sem bônus nenhum não dá para voltar (o desenho da tabela some), então "off" só zera na cópia gerada
+      for (var i = 0; i < 120; i++) { var v = tt[i] > 127 ? tt[i] - 256 : tt[i]; if (v) tt[i] = (v > 0 ? lv : 256 - lv) & 255; }
+      if (c.terrain > 0) { writeExe(ed, TERRAIN_TABLE, tt); log.push('bônus de terreno ' + (lv * 10)); }
+    }
+    if ((o.priceDiv && o.priceDiv !== 1) || o.buyAll) {
+      var costs = ed.costs.slice(), div = o.priceDiv || 1;
+      for (i = 0; i < CARDS; i++) {
+        var cost = u32(costs, i * 8), pw = u32(costs, i * 8 + 4);
+        if (cost >= 999999) { if (!o.buyAll || pw === 0xFFFFFFFE) continue; cost = 99999; }
+        cost = div === 'gratis' ? 1 : Math.max(1, Math.floor(cost / div));
+        costs[i * 8] = cost & 255; costs[i * 8 + 1] = (cost >> 8) & 255; costs[i * 8 + 2] = (cost >> 16) & 255; costs[i * 8 + 3] = (cost >>> 24) & 255;
+      }
+      ed.writes.push({ file: 'mrg', off: COSTS, data: costs });
+      log.push('preço das senhas ' + (div === 'gratis' ? '1 starchip' : (div === 1 ? 'normal' : '÷' + div)) + (o.buyAll ? ', proibidas à venda' : ''));
+    }
+    var nCards = 0;
+    Object.keys(o.cards || {}).forEach(function (k) {
+      var id = +k, e = o.cards[k], cur = cardInfo(ed, id);
+      var v = {}; ['atk', 'def', 'gs1', 'gs2', 'type', 'level', 'attr'].forEach(function (f) { v[f] = e[f] != null ? e[f] : cur[f]; });
+      var packed = ((Math.min(5110, Math.max(0, v.atk)) / 10) & 0x1FF) | (((Math.min(5110, Math.max(0, v.def)) / 10) & 0x1FF) << 9) |
+        ((v.gs1 & 15) << 18) | ((v.gs2 & 15) << 22) | ((v.type & 31) << 26);
+      packed >>>= 0;
+      ed.writes.push({ file: 'slus', off: STATS + (id - 1) * 4, data: new Uint8Array([packed & 255, (packed >>> 8) & 255, (packed >>> 16) & 255, packed >>> 24]) });
+      ed.writes.push({ file: 'slus', off: LEVEL_ATTR + id - 1, data: new Uint8Array([(v.level & 15) | ((v.attr & 15) << 4)]) });
+      nCards++;
+    });
+    if (nCards) log.push(nCards + ' carta(s) editada(s)');
+    var rb = ed.ritualBlock.slice(), nr = 0;
+    Object.keys(o.rituals || {}).forEach(function (k) {
+      var row = o.rituals[k];
+      if (!row || row.length !== 5 || +k >= 24 || row.some(function (x) { return !(x >= 1 && x <= CARDS); })) return;
+      row.forEach(function (x, j) { rb[+k * 10 + j * 2] = x & 255; rb[+k * 10 + j * 2 + 1] = x >> 8; });
+      nr++;
+    });
+    if (nr && !same(rb, ed.ritualBlock)) { ed.writes.push({ file: 'mrg', off: RITUALS, data: rb }); log.push(nr + ' ritual(is) editado(s)'); }
     var ex = DIFFICULTY[o.difficulty || 'normal'];
     if (ex) { scaleDecks(ed, ex); log.push('decks: ' + o.difficulty); }
     if (!same(ed.duelBlock, ed.duelBlockOrig)) ed.writes.push({ file: 'mrg', off: DUELIST_BASE, data: ed.duelBlock });
@@ -303,5 +459,6 @@
     return { ppf: out, sectors: lbas.length };
   }
 
-  return { open: open, apply: apply, buildPatch: buildPatch, PRESETS: PRESETS, fixSector: fixSector };
+  return { open: open, apply: apply, buildPatch: buildPatch, PRESETS: PRESETS, fixSector: fixSector, cardInfo: cardInfo,
+    TYPES: TYPES, ATTRS: ATTRS, STARS: STARS, TERRAIN_LEVELS: TERRAIN_LEVELS };
 });
