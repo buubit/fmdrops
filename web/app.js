@@ -339,7 +339,7 @@
   /* ---------- Mod ("GameShark") ---------- */
 
   var mod = { blob: null, caps: null, error: '', busy: false };
-  var MOD_DEFAULT = { drops: 100, starchips: 0, lp: 8000, allDrops: true, megamorph: true, difficulty: 'normal' };
+  var MOD_DEFAULT = { freeDuel: true, drops: 100, starchips: 0, lp: 8000, allDrops: true, megamorph: true, difficulty: 'normal' };
   var modOpts = (function () {
     try { return Object.assign({}, MOD_DEFAULT, JSON.parse(localStorage.getItem('modOpts') || '{}')); } catch (e) { return Object.assign({}, MOD_DEFAULT); }
   })();
@@ -365,9 +365,10 @@
           return '<button data-quick="' + id + '" data-v="' + q + '" aria-pressed="' + (+v === q) + '">' + q + '</button>';
         }).join('') + '</div>' : '') + '</div>';
     };
-    var tog = function (id, label, help) {
-      return '<label class="opt toggle"><span><b>' + label + '</b><small>' + help + '</small></span>' +
-        '<input type="checkbox" class="modtog" id="' + id + '"' + (modOpts[id] ? ' checked' : '') + '><i></i></label>';
+    var tog = function (id, label, help, avail) {
+      var dis = avail === null;
+      return '<label class="opt toggle"><span><b>' + label + '</b><small>' + help + '</small>' + (dis ? '<small class="na">não disponível nesta versão do jogo</small>' : '') + '</span>' +
+        '<input type="checkbox" class="modtog" id="' + id + '"' + (modOpts[id] && !dis ? ' checked' : '') + (dis ? ' disabled' : '') + '><i></i></label>';
     };
     var diffs = [['facil', 'Fácil'], ['normal', 'Normal'], ['dificil', 'Difícil'], ['muito', 'Muito difícil']];
     var presets = [['original', 'Original'], ['drop100', 'Drop 100'], ['facil', 'Fácil demais'], ['desafio', 'Desafio']];
@@ -378,6 +379,7 @@
       num('drops', 'Cartas por duelo vencido', 'Original: 1', modOpts.drops, 1, 999, [1, 5, 15, 100]) +
       num('starchips', 'Starchips extras por duelo', 'Somados ao prêmio normal', modOpts.starchips, 0, 30000, [0, 100, 500]) +
       num('lp', 'Vida inicial (os dois jogadores)', 'Original: 8000', modOpts.lp, 100, 9999, [4000, 8000, 9999]) +
+      tog('freeDuel', 'Todos os duelistas no Free Duel', 'Liberados desde o início, sem precisar avançar na história', c.freeDuel) +
       tog('allDrops', 'Todas as cartas dropáveis', 'As 82 cartas que ninguém dropa vão para duelistas temáticos') +
       tog('megamorph', 'Megamorph em S/A POW', 'Pegasus, DarkNite e Heishin passam a dropar no POW também') +
       '<div class="opt"><span><b>Dificuldade dos decks</b><small>Difícil: os duelistas puxam mais os monstros fortes que já têm. Fácil: o contrário.</small></span>' +
@@ -496,7 +498,7 @@
     else if (t.id === 'btnOutFolder') native.chooseOutputFolder();
     else if (t.dataset.preset) {
       var pr = FMMod.PRESETS[t.dataset.preset];
-      Object.keys(pr).forEach(function (k) { if (!(mod.caps && ['drops', 'starchips', 'lp'].indexOf(k) >= 0 && mod.caps[k] == null)) modOpts[k] = pr[k]; });
+      Object.keys(pr).forEach(function (k) { if (!(mod.caps && ['drops', 'starchips', 'lp', 'freeDuel'].indexOf(k) >= 0 && mod.caps[k] == null)) modOpts[k] = pr[k]; });
       saveModOpts(); render();
     }
     else if (t.dataset.quick) { modOpts[t.dataset.quick] = +t.dataset.v; saveModOpts(); render(); }

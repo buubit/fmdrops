@@ -7,7 +7,7 @@ App Android simples e 100% local para consultar **onde cada carta dropa** no
   dropam, em qual rank (S/A POW, B/C/D, S/A TEC) e a chance.
 - Lista de duelistas com tudo que cada um dropa.
 - Aba Fusões só com cartas feitas por fusão ou ritual; combinações repetidas aparecem agrupadas por tipo (ex.: Dragão + Trovão).
-- Aba **Mod**: escolhe o `.bin`, liga/desliga opções (cartas por duelo, starchips, vida inicial, todas as cartas dropáveis, Megamorph em POW, dificuldade) e grava um `.bin` novo para o DuckStation. Mesma lógica de `tools/fmmod.py` (`web/mod.js`, testado com `tools/mod-test.js`).
+- Aba **Mod**: escolhe o `.bin`, liga/desliga opções (todos os duelistas no Free Duel, cartas por duelo, starchips, vida inicial, todas as cartas dropáveis, Megamorph em POW, dificuldade) e grava um `.bin` novo para o DuckStation. Mesma lógica de `tools/fmmod.py` (`web/mod.js`, testado com `tools/mod-test.js`).
 - Atualização por dentro do app (⚙ → **Procurar atualização** → **Atualizar agora**), sem reinstalar o APK. O APK só precisa ser baixado de novo quando a casca Android muda (`android/shell-version.txt`).
 - Sem servidor, sem banco, sem internet.
 
@@ -62,6 +62,7 @@ Offsets da versão USA, conforme o projeto aberto
 | Custo em estrelas / senha | `WA_MRG.MRG` | `0xFB9808` |
 | Fusões | `WA_MRG.MRG` | `0xB87800` (`0x10000` bytes) |
 | Rituais | `WA_MRG.MRG` | `0xB97800` (registros de 5 × u16) |
+| Trava do Free Duel | `WA_MRG.MRG` | `0xF6D3DC` (`sb zero` que tranca duelistas sem a flag `0x6E0+id`) |
 
 As chances são em 2048 avos por tabela.
 

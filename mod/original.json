@@ -1094,5 +1094,6 @@
    "pool": "pow",
    "rate": 16
   }
- ]
+ ],
+ "free_duel_all": true
 }

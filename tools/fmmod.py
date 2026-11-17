@@ -25,6 +25,9 @@ Receita (JSON):
   Reescala o deck de cada duelista para favorecer os monstros mais fortes que ele
   já usa (peso x (ATK/1000)^n). Não coloca cartas novas no deck.
 
+    "free_duel_all": true
+  Libera todos os duelistas no Free Duel desde o início (WA_MRG.MRG 0xF6D3DC: o
+  "sb zero" que tranca quem não tem a flag 0x6E0+id vira nop).
     "multi_drop": 100
   Cartas por duelo vencido (só no executável original SLUS_014.11). Usa uma rotina
   de 27 instruções, gravada num trecho de código que o jogo não chama (0x80060E70):
@@ -313,6 +316,13 @@ def cmd_show(img, query):
 def cmd_build(img, out, recipe_path):
     g = Game(img)
     recipe = json.load(open(recipe_path, encoding="utf-8"))
+    if recipe.get("free_duel_all"):
+        cur = img.read(img.mrg, 0xF6D3DC, 4)
+        if cur == bytes.fromhex("000040a0"):
+            img.write(img.mrg, 0xF6D3DC, bytes(4))
+            print("todos os duelistas liberados no Free Duel")
+        elif cur != bytes(4):
+            sys.exit("free_duel_all: código do menu do Free Duel diferente do esperado.")
     if recipe.get("multi_drop"):
         patch_multi_drop(img, int(recipe["multi_drop"]))
     for step in recipe.get("add_drops", []):

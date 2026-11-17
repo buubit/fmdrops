@@ -21,6 +21,9 @@
     '000000001400bf8f1000b08f0800e0031800bd27';
   var STARCHIPS_SITE = 0x80021EDC;   // nop no original; addiu v1,v1,N soma N starchips por duelo
   var LP_SITE = 0x800175D0;          // addiu v0,zero,8000: vida inicial dos dois jogadores
+  // Menu do Free Duel (módulo em WA_MRG.MRG): marca os 39 duelistas como liberados e apaga a marca
+  // de quem não tem a flag 0x6E0+id. Trocar o "apagar" (sb zero,(v0)) por nop libera todos.
+  var FREE_DUEL_SITE = 0xF6D3DC, FREE_DUEL_LOCK = [0x00, 0x00, 0x40, 0xA0];
 
   // Cartas que ninguém dropa no original -> [carta, duelista, duelista, chance/2048] (S/A POW e S/A TEC)
   var ALL_DROPS = [[7,1,6,24],[17,1,13,24],[18,1,13,24],[22,14,27,10],[28,2,7,24],[37,15,35,10],[51,9,25,16],[52,10,23,16],[56,10,23,24],[57,10,24,10],[60,21,22,16],[62,11,29,24],[63,11,30,16],[64,3,9,24],[67,10,38,10],[69,9,28,10],[72,10,23,24],[92,18,25,16],[217,39,36,10],[235,4,10,24],[252,5,11,24],[278,10,23,24],[284,6,12,24],[288,7,1,24],[299,9,2,24],[318,22,32,10],[348,24,33,10],[351,10,3,24],[352,11,4,24],[353,19,27,16],[354,12,5,24],[355,20,29,16],[356,26,34,10],[357,28,35,10],[358,30,36,10],[359,1,6,24],[360,32,37,10],[361,2,7,24],[362,33,38,10],[363,3,9,24],[364,39,38,10],[365,34,39,10],[369,21,31,16],[374,33,34,10],[380,36,17,10],[428,4,10,24],[429,5,11,24],[489,6,12,24],[499,10,23,24],[537,7,1,24],[541,9,2,24],[545,23,13,16],[554,25,26,16],[555,25,14,16],[562,10,23,24],[603,29,20,24],[628,10,3,24],[640,10,23,24],[644,11,4,24],[667,33,34,10],[669,35,15,10],[670,39,38,10],[689,36,17,10],[696,10,24,10],[701,37,22,10],[702,38,24,10],[703,25,26,10],[704,27,28,10],[705,39,26,10],[706,15,28,10],[708,29,30,10],[709,17,30,10],[710,21,22,10],[711,27,16,16],[715,22,32,10],[716,24,33,10],[717,10,24,10],[718,21,22,10],[719,26,34,10],[720,28,35,10],[721,16,37,10],[722,16,37,10]];
@@ -30,10 +33,10 @@
   var DIFFICULTY = { facil: -1, normal: 0, dificil: 2, muito: 3 };
 
   var PRESETS = {
-    original: { drops: 1, starchips: 0, lp: 8000, allDrops: false, megamorph: false, difficulty: 'normal' },
-    drop100: { drops: 100, starchips: 0, lp: 8000, allDrops: true, megamorph: true, difficulty: 'normal' },
-    facil: { drops: 100, starchips: 500, lp: 9999, allDrops: true, megamorph: true, difficulty: 'facil' },
-    desafio: { drops: 15, starchips: 0, lp: 8000, allDrops: true, megamorph: true, difficulty: 'dificil' }
+    original: { freeDuel: false, drops: 1, starchips: 0, lp: 8000, allDrops: false, megamorph: false, difficulty: 'normal' },
+    drop100: { freeDuel: true, drops: 100, starchips: 0, lp: 8000, allDrops: true, megamorph: true, difficulty: 'normal' },
+    facil: { freeDuel: true, drops: 100, starchips: 500, lp: 9999, allDrops: true, megamorph: true, difficulty: 'facil' },
+    desafio: { freeDuel: true, drops: 15, starchips: 0, lp: 8000, allDrops: true, megamorph: true, difficulty: 'dificil' }
   };
 
   // ---- EDC / ECC (CD-ROM Mode 2 Form 1)
@@ -105,6 +108,7 @@
     // tabelas dos duelistas (39 x 0x1800)
     ed.duelBlock = await src.mrg.read(DUELIST_BASE, DUELISTS * DUELIST_STRIDE);
     ed.duelBlockOrig = ed.duelBlock.slice();
+    ed.freeDuel = await src.mrg.read(FREE_DUEL_SITE, 4);
     ed.caps = capabilities(ed);
     return ed;
   }
@@ -122,7 +126,10 @@
     if (u32(sc, 0) === 0) starchips = 0;
     else if (sc[2] === 0x63 && sc[3] === 0x24) starchips = u16(sc, 0);
     var lp = exeBytes(ed, LP_SITE, 4), life = (lp[2] === 0x02 && lp[3] === 0x24) ? u16(lp, 0) : null;
-    return { drops: drops, starchips: starchips, lp: life, exe: ed.src.slusName };
+    var fd = ed.freeDuel, freeDuel = null;
+    if (same(fd, new Uint8Array(FREE_DUEL_LOCK))) freeDuel = false;
+    else if (u32(fd, 0) === 0) freeDuel = true;
+    return { drops: drops, starchips: starchips, lp: life, freeDuel: freeDuel, exe: ed.src.slusName };
   }
 
   function writeExe(ed, ram, bytes) { ed.writes.push({ file: 'slus', off: ed.exeOff(ram), data: bytes }); }
@@ -237,6 +244,10 @@
     if (o.megamorph) {
       MEGAMORPH_POW.forEach(function (m) { if (table(ed, m[0], 'pow')[MEGAMORPH - 1] < m[1]) setRate(ed, m[0], 'pow', MEGAMORPH, m[1]); });
       log.push('Megamorph em S/A POW');
+    }
+    if (o.freeDuel != null && c.freeDuel != null && !!o.freeDuel !== c.freeDuel) {
+      ed.writes.push({ file: 'mrg', off: FREE_DUEL_SITE, data: o.freeDuel ? new Uint8Array(4) : new Uint8Array(FREE_DUEL_LOCK) });
+      log.push(o.freeDuel ? 'todos os duelistas no Free Duel' : 'Free Duel normal');
     }
     var ex = DIFFICULTY[o.difficulty || 'normal'];
     if (ex) { scaleDecks(ed, ex); log.push('decks: ' + o.difficulty); }

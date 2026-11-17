@@ -1095,5 +1095,6 @@
    "rate": 16
   }
  ],
- "hard_decks": 2.0
+ "hard_decks": 2.0,
+ "free_duel_all": true
 }

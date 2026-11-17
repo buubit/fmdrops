@@ -1,6 +1,12 @@
 {
-  "drops": [
-    {"card": "Megamorph", "duelist": "all", "pool": "pow", "copy_from": "tec"}
-  ],
-  "hard_decks": 2.0
+ "drops": [
+  {
+   "card": "Megamorph",
+   "duelist": "all",
+   "pool": "pow",
+   "copy_from": "tec"
+  }
+ ],
+ "hard_decks": 2.0,
+ "free_duel_all": true
 }

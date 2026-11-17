@@ -1,5 +1,11 @@
 {
-  "drops": [
-    {"card": "Megamorph", "duelist": "all", "pool": "pow", "copy_from": "tec"}
-  ]
+ "drops": [
+  {
+   "card": "Megamorph",
+   "duelist": "all",
+   "pool": "pow",
+   "copy_from": "tec"
+  }
+ ],
+ "free_duel_all": true
 }
