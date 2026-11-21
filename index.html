@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#08141a">
+<title>FM Drops</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header id="bar">
+  <div class="row">
+    <h1><span>FM Drops</span></h1>
+    <button id="updBadge" class="badge-btn" hidden>Atualizar</button>
+    <button id="btnSettings" class="round" aria-label="Configurações"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+  </div>
+  <div class="row" id="tools" hidden>
+    <input id="search" type="search" placeholder="Buscar carta ou número" autocomplete="off">
+    <div class="tabs" role="tablist">
+      <button id="tabCards" role="tab" aria-selected="true">Cartas</button>
+      <button id="tabDeck" role="tab" aria-selected="false">Deck</button>
+      <button id="tabFusions" role="tab" aria-selected="false">Fusões</button>
+      <button id="tabDuelists" role="tab" aria-selected="false">Duelistas</button>
+      <button id="tabMod" role="tab" aria-selected="false">Mod</button>
+    </div>
+  </div>
+</header>
+
+<main id="main"></main>
+
+<div id="sheet" class="sheet" hidden>
+  <div class="sheet-body" role="dialog" aria-modal="true">
+    <button id="sheetClose" class="round close" aria-label="Fechar">✕</button>
+    <div id="sheetContent"></div>
+  </div>
+</div>
+
+<input id="file" type="file" multiple hidden>
+<input id="modFile" type="file" hidden>
+<input id="imgFile" type="file" accept="image/*" hidden>
+
+<script src="version.js"></script>
+<script src="fm.js"></script>
+<script src="mod.js"></script>
+<script src="lang-pt.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
