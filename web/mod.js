@@ -557,11 +557,12 @@
     }
     ed.writes.forEach(function (w) { touch(w.file, w.off, w.data); });
     var lbas = Object.keys(dirty).map(Number).sort(function (a, b) { return a - b; });
-    var recs = [], size = 60;
+    var recs = [], size = 60, secs = [];
     for (var n = 0; n < lbas.length; n++) {
       var lba = lbas[n], orig = await src.readRaw(lba, 1), sec = orig.slice();
       dirty[lba].forEach(function (p) { sec.set(p[1], src.dataOffset + p[0]); });
       fixSector(sec);
+      secs.push([lba * SECTOR, sec]);
       // registros só onde mudou (até 255 bytes cada), com os bytes originais (undo)
       for (var i = 0; i < SECTOR;) {
         if (sec[i] === orig[i]) { i++; continue; }
@@ -588,7 +589,7 @@
       out.set(r[2], p + 9 + r[1].length);
       p += 9 + 2 * r[1].length;
     });
-    return { ppf: out, sectors: lbas.length };
+    return { ppf: out, sectors: lbas.length, secs: secs };
   }
 
   return { open: open, apply: apply, buildPatch: buildPatch, PRESETS: PRESETS, fixSector: fixSector, cardInfo: cardInfo,

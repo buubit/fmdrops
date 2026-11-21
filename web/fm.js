@@ -83,7 +83,7 @@
   // "blob" = objeto com .size e .read(inicio, fim) -> Promise<Uint8Array>
   function fromFile(file) {
     return {
-      size: file.size, name: file.name,
+      size: file.size, name: file.name, file: file,
       read: function (a, b) {
         return file.slice(a, b).arrayBuffer().then(function (x) { return new Uint8Array(x); });
       }

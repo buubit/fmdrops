@@ -324,8 +324,11 @@
     });
   }
 
+  var WEBSITE = !native && /^https?:/.test(location.protocol) && !/app\.fmdrops/.test(location.host);
   function checkUpdate() {
     var box = $('update');
+    if (WEBSITE) { box.innerHTML = '<p class="note">No site você sempre usa a versão mais nova (build ' + BUILD + '). Se algo parecer antigo, recarregue a página.</p>' +
+      '<p class="meta">Quer no celular? <a href="https://github.com/buubit/fmdrops/releases/latest">Baixe o APK</a>.</p>'; return; }
     box.innerHTML = '<p class="meta">Procurando…</p>';
     findUpdate().then(function (u) {
       if (!$('update')) return;
@@ -974,6 +977,43 @@
     return btoa(s);
   }
 
+  // Navegador (PC): o .bin novo é o original com só os setores mudados trocados (sem copiar 700 MB na memória).
+  async function webSave(file, secs, name) {
+    var parts = [], pos = 0;
+    secs.forEach(function (x) { parts.push(file.slice(pos, x[0]), x[1]); pos = x[0] + x[1].length; });
+    parts.push(file.slice(pos));
+    var bin = new Blob(parts, { type: 'application/octet-stream' });
+    var cueName = name.replace(/\.bin$/, '.cue');
+    var cue = new Blob(['FILE "' + name + '" BINARY\r\n  TRACK 01 MODE2/2352\r\n    INDEX 01 00:00:00\r\n'], { type: 'text/plain' });
+    if (window.showDirectoryPicker) {
+      try {
+        var dir = await window.showDirectoryPicker({ id: 'fmgames', mode: 'readwrite' });
+        patchBox('<p class="meta">Gravando ' + esc(name) + '…</p><progress max="1" value="0" id="webProg"></progress>');
+        var w = await (await dir.getFileHandle(name, { create: true })).createWritable();
+        var done = 0, reader = bin.stream().getReader();
+        for (;;) {
+          var r = await reader.read(); if (r.done) break;
+          await w.write(r.value); done += r.value.length;
+          var pg = $('webProg'); if (pg) pg.value = done / bin.size;
+        }
+        await w.close();
+        var wc = await (await dir.getFileHandle(cueName, { create: true })).createWritable();
+        await wc.write(cue); await wc.close();
+        patchBox('<p class="note">Pronto! <b>' + esc(name) + '</b> e o .cue estão na pasta <b>' + esc(dir.name) + '</b>. Abra o .cue no DuckStation.</p>');
+        return;
+      } catch (e) {
+        if (e && e.name === 'AbortError') { patchBox('<p class="meta">Cancelado.</p><button id="btnModBuild">Gerar de novo</button>'); return; }
+        /* sem permissão de pasta: cai para o download normal */
+      }
+    }
+    [[bin, name], [cue, cueName]].forEach(function (x, i) {
+      setTimeout(function () {
+        var a = document.createElement('a'); a.href = URL.createObjectURL(x[0]); a.download = x[1]; document.body.appendChild(a); a.click(); a.remove();
+      }, i * 800);
+    });
+    patchBox('<p class="note">Baixando <b>' + esc(name) + '</b> e o .cue. Se o navegador perguntar, permita baixar vários arquivos. Deixe os dois na mesma pasta e abra o .cue no DuckStation.</p>');
+  }
+
   async function modBuild() {
     mod.busy = true; render();
     try {
@@ -987,6 +1027,7 @@
       mod.busy = false; render();
       patchBox('<p class="meta">' + esc(log.join(' · ')) + '</p>');
       if (native && native.buildImage) native.buildImage(toBase64(res.ppf), name);
+      else if (mod.blob.file) await webSave(mod.blob.file, res.secs, name);
       else {
         var a = document.createElement('a');
         a.href = URL.createObjectURL(new Blob([res.ppf])); a.download = name.replace(/\.bin$/, '.ppf'); a.click();
@@ -1231,5 +1272,5 @@
   boot();
   window.__fmBooted = true;
   // Aviso discreto no topo quando existe versão nova.
-  findUpdate().then(function (u) { if (u.newer) $('updBadge').hidden = false; }).catch(function () {});
+  if (!WEBSITE) findUpdate().then(function (u) { if (u.newer) $('updBadge').hidden = false; }).catch(function () {});
 })();
